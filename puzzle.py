@@ -10,30 +10,17 @@ class Puzzle(ACOProblem):
     '''
     
     def __init__(self, initialPieces, solution, alpha, beta):
+        
         super(Puzzle, self).__init__(initialPieces, solution, alpha, beta)
         
-      
-    ''' 
-    Here we determine each state successors
-    For example:
-    
-    1   2   3   4
-    5   6   7   8
-    9  10  11  12
-    13 14  15  0
-    
-    Will have
-    
-    1   2   3   4            1   2   3   4 
-    5   6   7   8   and      5   6   7   8
-    9  10  11  12            9  10  11   0
-    13 14  0   15           13  14  15  12
-    
-    as successors.
-    
-    '''   
+  
     def successors(self, state):
-
+      
+        ''' 
+        Here we determine each state successors
+    
+        ''' 
+        
         pieces,hole = state
         successors = list()
         
@@ -44,28 +31,28 @@ class Puzzle(ACOProblem):
         if hole < 4 == 0:
             successor = pieces[:] 
             successor[hole],successor[hole+4] = successor[hole+4],0    
-            successors.append(successor)
+            successors.append((successor,hole+4))
         
         # If the hole is in the right edge of the square
         # We are sure the hole can go left (index - 1)
         if hole % 4 == 3:
             successor = pieces[:]
             successor[hole],successor[hole-1] = successor[hole-1],0
-            successors.append(successor)
+            successors.append((successor,hole-1))
             
         # If the hole is on the bottom edge of the square
         # We are sure the hole can go up (index - 4)
         if hole > 11:
             successor = pieces[:]
             successor[hole],successor[hole-4] = successor[hole-4],0
-            successors.append(successor)
+            successors.append((successor,hole-4))
                         
         # If the hole is on the left edge of the square
         # We are sure the hole can go right (index + 1)
         if hole % 4 == 0:
             successor = pieces[:]
             successor[hole],successor[hole+1] = successor[hole+1],0
-            successors.append(successor)
+            successors.append((successor,hole+1))
 
             
         return successors
