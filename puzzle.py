@@ -11,8 +11,13 @@ class Puzzle(ACOProblem):
     
     def __init__(self, initialPieces, solution, alpha, beta, number_of_ants, p):
         
-        super(Puzzle, self).__init__([initialPieces], [solution], alpha, beta, number_of_ants)
+        super(Puzzle, self).__init__([initialPieces], [solution], alpha, beta, number_of_ants, p)
         
+        # Now we pass the self to every ant so they know how to expand the graph.
+        
+        for ant in self.colony.ants:
+            
+            ant.puzzle = self
 
     def endCondition(self):
         '''
@@ -20,6 +25,16 @@ class Puzzle(ACOProblem):
         '''
         # TODO
         return self.globalSolution < 30
+    
+    def generateNodeHash(self, state):
+        
+        ''' generateNodeHash
+            Parameters:
+            state
+            
+            Based on the state, we generate an unique integer hash, so we can identify uniquely
+            each node of the graph
+        '''
         
     def successors(self, state):
       

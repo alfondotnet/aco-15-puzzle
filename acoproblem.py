@@ -28,6 +28,14 @@ class ACOProblem(object):
         self.initial_tau = 1
         self.globalSolution = None
         
+
+    def generateNodeHash(self, state):
+        raise NotImplementedError()
+        '''
+        To override:
+        Based on the state, we generate an unique integer hash, so we can identify uniquely
+        each node of the graph
+        '''
         
     def objectiveFunction(self):
         raise NotImplementedError()
@@ -177,6 +185,8 @@ class ACOProblem(object):
             results_list.append(results.get())
             
         print (results_list)
+        
+        
             
     def pheromoneUpdate(self):
         ''' pheromoneUpdate

@@ -1,5 +1,4 @@
 
-
 class Ant(object):
     
     def __init__(self, ant_id):
@@ -15,10 +14,12 @@ class Ant(object):
         self.startNode = None # This is assigned on the start function
         self.currentNode = None
         
+        
         self.probability_table = dict() # Probability table for each node that this ant has visited
 
-
-        self.graph =
+        self.puzzle = None # It's going to be passed by Puzzle in the __init__ so the ant knows
+                           # How to expand the graph and so on
+        
     
     def __str__(self):
         
@@ -26,6 +27,10 @@ class Ant(object):
 
         
     def __call__(self):
+        
+        if self.puzzle == None:
+            
+            raise Exception ("You have to pass an instance of your puzzle to every ant of the colony first!")
     
         ''' __call__ (lookForFood)
             Method to be called by Consumer in a multiprocessing Queue
@@ -36,6 +41,8 @@ class Ant(object):
             return to it's house, giving a positive feedback (depositing pheromone)
             on the path
         '''
+        
+        
         
         
         
