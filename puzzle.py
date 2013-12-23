@@ -9,9 +9,9 @@ class Puzzle(ACOProblem):
     So, our state is a pair ([state],hole)
     '''
     
-    def __init__(self, initialPieces, solution, alpha, beta):
+    def __init__(self, initialPieces, solution, alpha, beta, number_of_ants):
         
-        super(Puzzle, self).__init__(initialPieces, solution, alpha, beta)
+        super(Puzzle, self).__init__([initialPieces], [solution], alpha, beta, number_of_ants)
         
   
     def successors(self, state):

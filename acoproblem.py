@@ -25,6 +25,7 @@ class ACOProblem(object):
         self.initial_tau = 1
         self.globalSolution = None
         
+        
     def objectiveFunction(self):
         raise NotImplementedError()
         '''
@@ -85,10 +86,10 @@ class ACOProblem(object):
         
         for i,s in enumerate(self.initialStates):
             
-            self.graph.add_node(i+first_index+1)
-            self.graph.node[i+first_index+1]['node'] = ACONode(s, False, True) # Initial node
-            self.graph.node[i+first_index+1]['initial'] = True
-            self.graph.node[i]['solution'] = False
+            self.graph.add_node(i+first_index)
+            self.graph.node[i+first_index]['node'] = ACONode(s, False, True) # Initial node
+            self.graph.node[i+first_index]['initial'] = True
+            self.graph.node[i+first_index]['solution'] = False
          
         # ========================================
         # Initial Ants placement
@@ -109,7 +110,7 @@ class ACOProblem(object):
             # We break the loop when there is no more empty initialNodes
             # We assign the rest randomly
             
-            while len(ants_id_list) % len(self.initialStates) == 0:
+            while len(ants_id_list) > 0 and (len(ants_id_list) % len(self.initialStates) == 0):
                 
                 for s in self.initialStates:
                     
@@ -159,8 +160,4 @@ class ACOProblem(object):
         
         while not(self.endCondition()):
         
-            
-
-     
-        
-        
+            a="a" 
