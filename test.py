@@ -10,4 +10,6 @@ p1 = Puzzle(inicio, fin, 0.5, 0.5, 4)
 
 p1.start()
 
+print(p1.colony)
+
 p1.drawGraph()

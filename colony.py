@@ -15,4 +15,11 @@ class Colony:
             
     def __str__(self):
         
-        return str(self.ants[0])
+        colony_str = "Our colony has "+ str(len(self.ants)) + " ants.\n"
+        
+        for ant in self.ants:
+            
+            colony_str += str(ant)
+            
+        return colony_str
+            

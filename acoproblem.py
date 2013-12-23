@@ -62,6 +62,7 @@ class ACOProblem(object):
         Starts the problem
         (Creates initial sub-graph,
         places the ants equally in the "start nodes"
+        and the rest randomly
         )
         '''
         
@@ -102,6 +103,7 @@ class ACOProblem(object):
         
         # Otherwise we assign randomly
         
+        
         ants_id_list = [i for i in range(self.number_of_ants)]
         
         if self.number_of_ants > len(self.initialStates):
@@ -112,11 +114,11 @@ class ACOProblem(object):
             
             while len(ants_id_list) > 0 and (len(ants_id_list) % len(self.initialStates) == 0):
                 
-                for s in self.initialStates:
+                for i,_ in enumerate(self.initialStates):
                     
                     assigned_ant_id = ants_id_list.pop()
-                    self.colony.ants[assigned_ant_id].startNode = assigned_ant_id
-                    self.colony.ants[assigned_ant_id].currentNode = assigned_ant_id
+                    self.colony.ants[assigned_ant_id].startNode = i
+                    self.colony.ants[assigned_ant_id].currentNode = i
                 
         # We can make a shared random ant assignment for the rest of the cases
         
@@ -148,9 +150,7 @@ class ACOProblem(object):
           
                 self.graph.add_node(successor_index)
                 self.graph.node[successor_index]['node'] = ACONode(s)
-                self.graph.add_edge(1,successor_index, weight=self.initial_tau)
-            
-        
+                self.graph.add_edge(1,successor_index, weight=self.initial_tau)    
 
     def run(self):
             
