@@ -1,14 +1,16 @@
 import networkx as nx
 import matplotlib.pyplot as plt
+import multiprocessing
 from aconode import ACONode
 from colony import Colony
 from random import choice
+from consumer import Consumer
 
 class ACOProblem(object):
       
     '''Generic class for a generic ACOProblem'''
     
-    def __init__(self, initialStates, solutionStates, alpha, beta, number_of_ants) :      
+    def __init__(self, initialStates, solutionStates, alpha, beta, number_of_ants, p) :      
         '''
         Receives a list of initialStates and solutionStates
         To implement:
@@ -18,6 +20,7 @@ class ACOProblem(object):
         self.solutionStates = solutionStates
         self.alpha = alpha
         self.beta = beta
+        self.p = p # Evaporation rate
         self.graph = None
         self.number_of_ants = number_of_ants
         self.colony = Colony(number_of_ants)  # We create a Colony with n Ants
@@ -129,7 +132,59 @@ class ACOProblem(object):
             
             self.colony.ants[assigned_ant_id].startNode = assigned_initial_state
             self.colony.ants[assigned_ant_id].currentNode = assigned_initial_state
+
+    def generateAntSolutions(self):
         
+        ''' generateAntSolutions
+            Parameters:
+            none
+            
+            Generates different Ant Solutions by executing the respective methods in different
+            processes and letting the SO scheduler do the work
+        '''
+        
+        tasks = multiprocessing.JoinableQueue()
+        results = multiprocessing.Queue()      
+        
+        # Start consumers
+        
+        num_consumers = multiprocessing.cpu_count() * 2
+        consumers = [ Consumer(tasks, results) for i in range(num_consumers) ]  
+        
+        for w in consumers:
+            w.start()
+        
+        # Now we tell all the ants to go find some food
+        
+        num_tasks = 0
+        
+        for ant in self.colony.ants:
+            tasks.put(ant)
+            num_tasks += 1
+        
+        # Add a poison pill for each consumer
+    
+        for i in range(num_consumers):
+            tasks.put(None)
+        
+        # We wait now for all the ants to finish
+        
+        tasks.join() 
+        results_list = list()
+        
+        for _ in range(num_tasks):
+        
+            results_list.append(results.get())
+            
+        print (results_list)
+            
+    def pheromoneUpdate(self):
+        ''' pheromoneUpdate
+            Parameters:
+            none
+            
+            Update the pheromone on all edges
+        '''
 
     def expandNodes(self, node_indexes_to_expand):
         
@@ -137,7 +192,8 @@ class ACOProblem(object):
             Parameters:
             node_index: Indexes of nodes to expand
             
-            Expands some nodes
+            Expands some nodes. (creates successor nodes
+            and add edges from/to their parents and them).
         '''
         
         for n in node_indexes_to_expand:

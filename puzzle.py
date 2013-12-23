@@ -9,11 +9,18 @@ class Puzzle(ACOProblem):
     So, our state is a pair ([state],hole)
     '''
     
-    def __init__(self, initialPieces, solution, alpha, beta, number_of_ants):
+    def __init__(self, initialPieces, solution, alpha, beta, number_of_ants, p):
         
         super(Puzzle, self).__init__([initialPieces], [solution], alpha, beta, number_of_ants)
         
-  
+
+    def endCondition(self):
+        '''
+        Here we have to determine when we have to end.
+        '''
+        # TODO
+        return self.globalSolution < 30
+        
     def successors(self, state):
       
         ''' 
