@@ -19,7 +19,7 @@ class Colony:
         
         for ant in self.ants:
             
-            colony_str += str(ant)
+            colony_str += str(ant) + "\n"
             
         return colony_str
             

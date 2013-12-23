@@ -142,20 +142,27 @@ class ACOProblem(object):
         
         for n in node_indexes_to_expand:
             
-            successors = self.successors(n.state)
+            node_to_expand = self.graph.node[n]['node']
+            successors = self.successors(node_to_expand.state)
 
             for s in successors:
                 
-                successor_index = self.graph.number_of_nodes()+1
+                successor_index = self.graph.number_of_nodes()
           
                 self.graph.add_node(successor_index)
                 self.graph.node[successor_index]['node'] = ACONode(s)
-                self.graph.add_edge(1,successor_index, weight=self.initial_tau)    
+                self.graph.add_edge(n,successor_index, weight=self.initial_tau)    
+                
 
     def run(self):
+        
+        '''
+            Parameters:
+            
+        '''
             
         if self.graph == None: 
-            raise("The problem must be started first!")
+            raise Exception("The problem must be started first!")
         
         
         while not(self.endCondition()):
