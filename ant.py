@@ -1,3 +1,5 @@
+import networkx as nx
+from aconode import ACONode
 
 class Ant(object):
     
@@ -11,19 +13,30 @@ class Ant(object):
         '''
         
         self.id = ant_id
-        self.startNode = None # This is assigned on the start function
-        self.currentNode = None
+        self.start_node_id = None # This is assigned on the start function of ACOProblem
+        self.current_node_id = None # This is assigned on the start function of ACOProblem
+        self.solution_nodes_id = list() # This is assigned on the start function of ACOProblem
         
+        
+        self.graph = None # Each ant creates it's own graph at first in setStartNode
         
         self.probability_table = dict() # Probability table for each node that this ant has visited
 
         self.puzzle = None # It's going to be passed by Puzzle in the __init__ so the ant knows
-                           # How to expand the graph and so on
+        # How to expand the graph and so on
         
     
+    def setStartNode(self, startNode):
+        
+        self.startNode = startNode
+        self.currentNode = startNode
+        self.graph = nx.Graph()
+        self.graph.add_node(self.puzzle.generateNodeHash(startNode))
+        
+        
     def __str__(self):
         
-        return "[ Ant no:"+ str(self.id) + ", Start node:"+ str(self.startNode)+", Current node: "+ str(self.currentNode) +" ]"
+        return "[ Ant no:"+ str(self.id) + ", Start node:"+ str(self.start_node_id)+", Current node: "+ str(self.current_node_id) +" ]"
 
         
     def __call__(self):
@@ -43,6 +56,30 @@ class Ant(object):
         '''
         
         
+    def expandNodes(self, node_indexes_to_expand):
+        
+        ''' expandNode
+            Parameters:
+            node_index: Indexes of nodes to expand
+            
+            Expands some nodes. (creates successor nodes
+            and add edges from/to their parents and them).
+        '''
+        
+        for n in node_indexes_to_expand:
+            
+            node_to_expand = self.graph.node[n]['node']
+            
+            successors = self.puzzle.successors(node_to_expand.state)
+
+            for s in successors:
+                
+                successor_index = self.graph.number_of_nodes()
+          
+                self.graph.add_node(successor_index)
+                self.graph.node[successor_index]['node'] = ACONode(s)
+                self.graph.add_edge(n,successor_index, weight=self.initial_tau)    
+                
         
         
         

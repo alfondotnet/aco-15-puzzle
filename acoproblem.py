@@ -84,24 +84,29 @@ class ACOProblem(object):
         self.graph = nx.Graph()
         
         # Now we place final and initial nodes
-        # In our particular problem, the only solution state will have 0 as index
-        # Because solutionState list has only one component
-        
-        for i,s in enumerate(self.solutionStates):
-        
-            self.graph.add_node(i)   
-            self.graph.node[i]['node'] = ACONode(s, True) # Solution node
-            self.graph.node[i]['solution'] = True
-            self.graph.node[i]['initial'] = False
+                
+        for s in self.solutionStates:
             
-        first_index = self.graph.number_of_nodes()
-        
-        for i,s in enumerate(self.initialStates):
+            node_index = self.generateNodeHash(s)
             
-            self.graph.add_node(i+first_index)
-            self.graph.node[i+first_index]['node'] = ACONode(s, False, True) # Initial node
-            self.graph.node[i+first_index]['initial'] = True
-            self.graph.node[i+first_index]['solution'] = False
+            self.graph.add_node(node_index)   
+            self.graph.node[node_index]['node'] = ACONode(s, True) # Solution node
+            self.graph.node[node_index]['solution'] = True
+            self.graph.node[node_index]['initial'] = False
+            
+            # Pass this node to every ant
+            
+            for ant in self.colony.ants:   
+                ant.solution_nodes_id.append(node_index)
+            
+        for s in self.initialStates:
+            
+            node_index = self.generateNodeHash(s)
+            
+            self.graph.add_node(node_index)
+            self.graph.node[node_index]['node'] = ACONode(s, False, True) # Initial node
+            self.graph.node[node_index]['initial'] = True
+            self.graph.node[node_index]['solution'] = False
          
         # ========================================
         # Initial Ants placement
@@ -113,8 +118,7 @@ class ACOProblem(object):
         # and the rest randomly
         
         # Otherwise we assign randomly
-        
-        
+           
         ants_id_list = [i for i in range(self.number_of_ants)]
         
         if self.number_of_ants > len(self.initialStates):
@@ -125,12 +129,14 @@ class ACOProblem(object):
             
             while len(ants_id_list) > 0 and (len(ants_id_list) % len(self.initialStates) == 0):
                 
-                for i,_ in enumerate(self.initialStates):
+                for s in self.initialStates:
                     
                     assigned_ant_id = ants_id_list.pop()
-                    self.colony.ants[assigned_ant_id].startNode = i
-                    self.colony.ants[assigned_ant_id].currentNode = i
-                
+                    initial_node_id = self.generateNodeHash(s)
+                    
+                    self.colony.ants[assigned_ant_id].start_node_id = initial_node_id
+                    self.colony.ants[assigned_ant_id].current_node_id = initial_node_id
+                    
         # We can make a shared random ant assignment for the rest of the cases
         
         while len(ants_id_list) > 0:
@@ -140,6 +146,7 @@ class ACOProblem(object):
             
             self.colony.ants[assigned_ant_id].startNode = assigned_initial_state
             self.colony.ants[assigned_ant_id].currentNode = assigned_initial_state
+
 
     def generateAntSolutions(self):
         
@@ -189,6 +196,7 @@ class ACOProblem(object):
         
             
     def pheromoneUpdate(self):
+        
         ''' pheromoneUpdate
             Parameters:
             none
@@ -196,34 +204,14 @@ class ACOProblem(object):
             Update the pheromone on all edges
         '''
 
-    def expandNodes(self, node_indexes_to_expand):
-        
-        ''' expandNode
-            Parameters:
-            node_index: Indexes of nodes to expand
-            
-            Expands some nodes. (creates successor nodes
-            and add edges from/to their parents and them).
-        '''
-        
-        for n in node_indexes_to_expand:
-            
-            node_to_expand = self.graph.node[n]['node']
-            successors = self.successors(node_to_expand.state)
-
-            for s in successors:
-                
-                successor_index = self.graph.number_of_nodes()
-          
-                self.graph.add_node(successor_index)
-                self.graph.node[successor_index]['node'] = ACONode(s)
-                self.graph.add_edge(n,successor_index, weight=self.initial_tau)    
-                
 
     def run(self):
         
         '''
             Parameters:
+            none
+            
+            This is the ACO Algorithm itself
             
         '''
             
@@ -233,4 +221,5 @@ class ACOProblem(object):
         
         while not(self.endCondition()):
         
-            a="a" 
+            solutions = self.generateAntSolutions()
+            self.pheromoneUpdate()

@@ -11,6 +11,7 @@ p1 = Puzzle(inicio, fin, 0.5, 0.5, 8, ratio_de_evaporacion)
 
 
 p1.start()
+
 print(p1.colony)
-p1.expandNodes([0])
+
 p1.drawGraph()
