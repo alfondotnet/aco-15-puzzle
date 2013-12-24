@@ -35,7 +35,18 @@ class Puzzle(ACOProblem):
             Based on the state, we generate an unique integer hash, so we can identify uniquely
             each node of the graph
         '''
+        idx = 0
         
+        state_tiles = state[0]
+        
+        for i in range(16):
+            
+            val = state_tiles[i]
+            
+            idx |= i << (val * 4)
+        
+        return idx       
+          
     def successors(self, state):
       
         ''' 
