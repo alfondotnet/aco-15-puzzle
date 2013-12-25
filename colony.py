@@ -1,5 +1,11 @@
 from ant import Ant
 
+'''
+colony.py
+
+@Author: Alfonso Perez-Embid (Twitter: @fonsurfing)
+
+'''
 
 class Colony:
     

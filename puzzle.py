@@ -1,6 +1,12 @@
 from acoproblem import ACOProblem
-
 import random
+
+'''
+puzzle.py
+
+@Author: Alfonso Perez-Embid (Twitter: @fonsurfing)
+
+'''
 
 class Puzzle(ACOProblem):
 

@@ -5,6 +5,14 @@ import math
 import sys
 import matplotlib.pyplot as plt
 
+'''
+ant.py
+
+@Author: Alfonso Perez-Embid (Twitter: @fonsurfing)
+
+'''
+
+
 class Ant(object):
     
     def __init__(self, ant_id):
@@ -131,8 +139,8 @@ class Ant(object):
             Returns:
             Dictionary (Key: Node, Value: Value of aij associated with that node)
             
-            Given the index of a node, calculates and updates the decision table for the node.
-            That is a table which contains for each neighbour node, its
+            Given the index of a node, calculates and/or returns the decision table for the node.
+
         '''
         
         # We first check if the node has already a decision table and return it instead

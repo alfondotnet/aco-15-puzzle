@@ -6,6 +6,14 @@ from colony import Colony
 from random import choice
 from consumer import Consumer
 
+'''
+acoproblem.py
+
+@Author: Alfonso Perez-Embid (Twitter: @fonsurfing)
+
+'''
+
+
 class ACOProblem(object):
       
     '''Generic class for a generic ACOProblem'''

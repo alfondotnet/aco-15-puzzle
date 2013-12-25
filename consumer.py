@@ -1,5 +1,16 @@
 import multiprocessing
 
+'''
+consumer.py
+
+@Author: Alfonso Perez-Embid (Twitter: @fonsurfing)
+
+Author of this snippet: The great Doug Hellmann
+More examples can be found in here http://pymotw.com/2/multiprocessing/communication.html
+
+'''
+
+
 class Consumer(multiprocessing.Process):
     
     def __init__(self, task_queue, result_queue):

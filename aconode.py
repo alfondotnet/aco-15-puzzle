@@ -1,4 +1,11 @@
 
+'''
+aconode.py
+
+@Author: Alfonso Perez-Embid (Twitter: @fonsurfing)
+
+'''
+
 
 class ACONode():
     
