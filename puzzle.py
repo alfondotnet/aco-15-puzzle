@@ -1,23 +1,25 @@
 from acoproblem import ACOProblem
 
+import random
+
 class Puzzle(ACOProblem):
 
     '''
-    This class overrides the generic class ACOProblem.
+    This class overrides the generic class ACOProblem.im
     To avoid having to look for the "hole" or "empty cell" in each state.
     I am passing the index of hole each time along with the state.
     So, our state is a pair ([state],hole)
     '''
     
-    def __init__(self, initialPieces, solution, alpha, beta, number_of_ants, p):
+    def __init__(self, initialPieces, solution, alpha, beta, number_of_ants, p, q0):
         
-        super(Puzzle, self).__init__([initialPieces], [solution], alpha, beta, number_of_ants, p)
+        super(Puzzle, self).__init__([initialPieces], [solution], alpha, beta, number_of_ants, p, q0)
         
         # Now we pass the self to every ant so they know how to expand the graph.
         
         for ant in self.colony.ants:
             
-            ant.puzzle = self
+            ant.aco_specific_problem = self
 
     def endCondition(self):
         '''
@@ -36,17 +38,39 @@ class Puzzle(ACOProblem):
             each node of the graph
         '''
         idx = 0
-        
         state_tiles = state[0]
-        
+
         for i in range(16):
             
             val = state_tiles[i]
-            
             idx |= i << (val * 4)
-        
+
+
         return idx       
           
+
+    def generateStateFromHash(self, hash):
+        
+        ''' This receives a hash and generates the state '''
+        # Todo
+
+
+    def calculate_cost(self, state):
+        
+        ''' calculate_cost:
+            Parameters: 
+            state = Current state to calculate cost (Remember is a pair State and hole index!)
+
+            Calculate the cost of 'state', by applying the heuristic function from it to the
+            solution state
+        '''
+        
+        # TODO
+        
+        return random.random()
+            
+            
+
     def successors(self, state):
       
         ''' 

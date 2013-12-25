@@ -10,7 +10,7 @@ class ACOProblem(object):
       
     '''Generic class for a generic ACOProblem'''
     
-    def __init__(self, initialStates, solutionStates, alpha, beta, number_of_ants, p) :      
+    def __init__(self, initialStates, solutionStates, alpha, beta, number_of_ants, p, q0) :      
         '''
         Receives a list of initialStates and solutionStates
         To implement:
@@ -21,6 +21,7 @@ class ACOProblem(object):
         self.alpha = alpha
         self.beta = beta
         self.p = p # Evaporation rate
+        self.q0 = q0 # Parameter of the problem. Indicates the tendency of the ants of exploring or following another ants
         self.graph = None
         self.number_of_ants = number_of_ants
         self.colony = Colony(number_of_ants)  # We create a Colony with n Ants
@@ -61,7 +62,7 @@ class ACOProblem(object):
         '''
     
     
-    def drawGraph(self):
+    def draw_graph(self):
         
         pos=nx.spring_layout(self.graph)
         nx.draw(self.graph,pos,node_color='#A0CBE2',edge_color='#BB0000',width=2,with_labels=True)
@@ -134,8 +135,7 @@ class ACOProblem(object):
                     assigned_ant_id = ants_id_list.pop()
                     initial_node_id = self.generateNodeHash(s)
                     
-                    self.colony.ants[assigned_ant_id].start_node_id = initial_node_id
-                    self.colony.ants[assigned_ant_id].current_node_id = initial_node_id
+                    self.colony.ants[assigned_ant_id].set_start_node(initial_node_id, self.graph)
                     
         # We can make a shared random ant assignment for the rest of the cases
         
@@ -144,8 +144,7 @@ class ACOProblem(object):
             assigned_ant_id = ants_id_list.pop()
             assigned_initial_state = choice(range(0,len(self.initialStates)))
             
-            self.colony.ants[assigned_ant_id].startNode = assigned_initial_state
-            self.colony.ants[assigned_ant_id].currentNode = assigned_initial_state
+            self.colony.ants[assigned_ant_id].set_start_node(assigned_initial_state, self.graph)
 
 
     def generateAntSolutions(self):
