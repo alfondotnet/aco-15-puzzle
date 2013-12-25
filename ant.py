@@ -4,6 +4,7 @@ import random
 import math
 import sys
 import matplotlib.pyplot as plt
+import operator
 
 '''
 ant.py
@@ -11,7 +12,9 @@ ant.py
 @Author: Alfonso Perez-Embid (Twitter: @fonsurfing)
 
 '''
-
+# We have to re-seed our RNG in order to give different results on 
+# differents tasks
+random.seed()
 
 class Ant(object):
     
@@ -63,13 +66,8 @@ class Ant(object):
 
     def __call__(self):
         
-        # We have to re-seed our RNG in order to give different results on 
-        # differents tasks
-        random.seed()
-        
         
         if self.aco_specific_problem == None:
-            
             raise Exception ("You have to pass an instance of your specific ACO problem to every ant of the colony first!")
     
         ''' __call__ (lookForFood)
@@ -83,13 +81,20 @@ class Ant(object):
             return to it's house, giving a positive feedback (depositing pheromone)
             on the path
         '''
-        
+
+
         while self.current_node_id not in self.solution_nodes_id:
             
+            
+            print ("estamos en: "+ str(self.aco_specific_problem.generateStateFromHash(self.current_node_id)))
+            raw_input()
+                
             self.expand_node(self.current_node_id)
+            self.move_to_another_node()
             
-            
+        
         return True
+    
     
     def expand_node(self, node_index_to_expand):
         
@@ -126,7 +131,9 @@ class Ant(object):
         '''
         
         self.current_node_id = node_index
-        self.list_of_visited_nodes_id.append(node_index)
+        
+        if node_index not in self.list_of_visited_nodes_id:
+            self.list_of_visited_nodes_id.append(node_index)
     
     def decision_table(self, node_index):
         
@@ -150,15 +157,14 @@ class Ant(object):
             return self.decision_tables[node_index]
         
         decision_table = dict() # This is going to be the dictonary of the decision table
-        edges_to_consider = self.graph.edges(self.current_node_id, data=True)
         
-        edges_not_in_working_memory = [e for e in edges_to_consider if e not in self.working_memory]
+        edges_to_consider = self.graph.edges(self.current_node_id, data=True)
         
         # This is the denominator of the aij formulae
         
         summatory_denominator = 0
         
-        for e in edges_not_in_working_memory:
+        for e in edges_to_consider:
         
             next_state = self.graph.node[e[1]]['node'].state
             
@@ -218,23 +224,58 @@ class Ant(object):
         '''
         
         q = random.random()
-
-
+        
         if q <= self.aco_specific_problem.q0:
             
-            edges_to_consider = self.graph.edges(self.current_node_id, data=True)
-            # Now we sort the list of edges to consider
-            # The edge we will take then would the last in the sorted list
-            edges_to_consider_sorted = sorted(edges_to_consider, key=lambda (source,target,data): data['weight'])
-            # example: [(17134975606245761055L, 17136101506152603675L, {'weight': 0.4939538810147658}), (17134975606245761055L, 18287897110852608030L, {'weight': 0.759895474826771})]
-            node_to_go = edges_to_consider_sorted[-1][1]
-            # We move instantly
-            self.move_ant(node_to_go)
+            # arg max aij
+            next_node = max(self.decision_table(self.current_node_id).iteritems(), key=operator.itemgetter(1))[0]
+             
+            self.move_ant(next_node)
         
         else:
             
-            a = 1
+            # Otherwise, we create a list of probabilities
             
+            proportion_list = dict()
+            
+            edges_to_consider = self.graph.edges(self.current_node_id, data=True)
+            edges_not_in_working_memory = [e for e in edges_to_consider if e not in self.working_memory]
+            
+            summatory_denominator = 0
+            
+            for e in edges_not_in_working_memory:
+                
+                summatory_denominator += self.decision_table(self.current_node_id)[e[1]]
+            
+            
+            
+            for node in self.decision_table(self.current_node_id).keys():
+                
+                proportion_list[node] = self.decision_table(self.current_node_id)[node] / summatory_denominator
+                
+            print("nos vamos a mover por el caso chungo")
+
+    def get_prop_random_node(self, prop_list):
+        
+        ''' get_prop_random_node:
+            Parameters: 
+            prob_list (dictionary of proportions)
+           
+            This is to be called from "move_to_another_node"
+        '''
+        
+        rand = random.random()
+        acc = 0 # accumulator
+        
+        for node in prop_list.keys():
+         
+            if prop_list[node] + acc > rand:
+                node_ret = node
+            acc += prop_list[node]
+            
+        return node_ret
+    
+              
     def draw_graph(self):
         
         pos=nx.spring_layout(self.graph)

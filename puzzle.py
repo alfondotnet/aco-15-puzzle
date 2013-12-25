@@ -49,7 +49,7 @@ class Puzzle(ACOProblem):
         for i in range(16):
             
             val = state_tiles[i]
-            idx |= i << (val * 4)
+            idx |= val << (i * 4)
 
 
         return idx       
@@ -58,8 +58,15 @@ class Puzzle(ACOProblem):
     def generateStateFromHash(self, hash):
         
         ''' This receives a hash and generates the state '''
-        # Todo
+        
+        hex = "{0:016x}".format(hash)[::-1] # we convert the number to hex and reverse it
+        list = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
+        
+        for i,h in enumerate(hex):    
+            digits = ['0','1','2','3','4','5','6','7','8','9','a','b','c','d','e','f']
+            list[i] = digits.index(h)
 
+        return (list,list.index(0))
 
     def calculate_cost(self, state):
         
@@ -73,7 +80,7 @@ class Puzzle(ACOProblem):
         
         # TODO
         
-        return random.random()
+        return 13
             
             
 
