@@ -13,7 +13,8 @@ ant.py
 
 '''
 # We have to re-seed our RNG in order to give different results on 
-# differents tasks
+# different tasks
+
 random.seed()
 
 class Ant(object):
@@ -82,17 +83,14 @@ class Ant(object):
             on the path
         '''
 
-
+        # 
         while self.current_node_id not in self.solution_nodes_id:
+            # caso chungo considera el nodo actual tmb (wtf??)
             
-            
-            print ("estamos en: "+ str(self.aco_specific_problem.generateStateFromHash(self.current_node_id)))
-            raw_input()
-                
             self.expand_node(self.current_node_id)
+            
             self.move_to_another_node()
             
-        
         return True
     
     
@@ -105,9 +103,8 @@ class Ant(object):
             Expands a node. (creates successor nodes
             and add edges from/to their parents and them).
         '''
-             
-        node_to_expand = self.graph.node[node_index_to_expand]['node']
         
+        node_to_expand = self.graph.node[node_index_to_expand]['node']
         successors = self.aco_specific_problem.successors(node_to_expand.state)
 
         for s in successors:
@@ -228,14 +225,15 @@ class Ant(object):
         if q <= self.aco_specific_problem.q0:
             
             # arg max aij
+
             next_node = max(self.decision_table(self.current_node_id).iteritems(), key=operator.itemgetter(1))[0]
-             
+            
             self.move_ant(next_node)
         
         else:
             
             # Otherwise, we create a list of probabilities
-            
+
             proportion_list = dict()
             
             edges_to_consider = self.graph.edges(self.current_node_id, data=True)
@@ -253,7 +251,8 @@ class Ant(object):
                 
                 proportion_list[node] = self.decision_table(self.current_node_id)[node] / summatory_denominator
                 
-            print("nos vamos a mover por el caso chungo")
+            
+            self.move_ant(self.get_prop_random_node(proportion_list))
 
     def get_prop_random_node(self, prop_list):
         

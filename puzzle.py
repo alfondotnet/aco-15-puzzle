@@ -80,7 +80,7 @@ class Puzzle(ACOProblem):
         
         # TODO
         
-        return 13
+        return random.random()
             
             
 
@@ -94,32 +94,43 @@ class Puzzle(ACOProblem):
         pieces,hole = state
         successors = list()
         
-        # Now we generate possible successors
+        potential_movements = dict({'up':True,'right':True,'down':True,'left':True})
         
-        # If the hole is on the top edge of the square
-        # We are sure that the hole can go down (index + 4)
-        if hole < 4 == 0:
+        
+        # Now we eliminate the potential movements
+        
+        if hole < 4:
+            potential_movements['up'] = False
+            
+        if hole % 4 == 3:
+            potential_movements['right'] = False
+            
+        if hole > 11: 
+            potential_movements['down'] = False    
+         
+        if hole % 4 == 0: 
+            potential_movements['left'] = False 
+            
+            
+        if potential_movements['down']:
             successor = pieces[:] 
             successor[hole],successor[hole+4] = successor[hole+4],0    
             successors.append((successor,hole+4))
         
-        # If the hole is in the right edge of the square
-        # We are sure the hole can go left (index - 1)
-        if hole % 4 == 3:
+
+        if potential_movements['left']:
             successor = pieces[:]
             successor[hole],successor[hole-1] = successor[hole-1],0
             successors.append((successor,hole-1))
             
-        # If the hole is on the bottom edge of the square
-        # We are sure the hole can go up (index - 4)
-        if hole > 11:
+
+        if potential_movements['up']:
             successor = pieces[:]
             successor[hole],successor[hole-4] = successor[hole-4],0
             successors.append((successor,hole-4))
                         
-        # If the hole is on the left edge of the square
-        # We are sure the hole can go right (index + 1)
-        if hole % 4 == 0:
+
+        if potential_movements['right']:
             successor = pieces[:]
             successor[hole],successor[hole+1] = successor[hole+1],0
             successors.append((successor,hole+1))
