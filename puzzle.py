@@ -68,6 +68,7 @@ class Puzzle(ACOProblem):
 
         return (list,list.index(0))
 
+
     def calculate_cost(self, state):
         
         ''' calculate_cost:
@@ -78,12 +79,77 @@ class Puzzle(ACOProblem):
             solution state
         '''
         
-        # TODO
+        solution = self.solutionStates[0]
+        cost = 0
         
-        return random.random()
+        def distance_between_array_indexes(index_from,index_to):
             
+            ''' given two indexes of the 15-puzzle array, return 
+                their manhattan distance
+                
+                1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 0
+                
+                1  2  3  4
+                5  6  7  8
+                9 10 11 12
+                1314 15 0
+                
+            '''
             
+            def index_to_ij(index):     
+                return (index%4,index/4)
+                
+            ij1 = index_to_ij(index_from)
+            ij2 = index_to_ij(index_to)
+            
+            return abs(ij2[0] - ij1[0]) + abs(ij2[1] - ij1[1])
+    
+        for i in range(16):
 
+            cost += distance_between_array_indexes(solution[0][i], state[0][i])
+        
+        return cost + self.number_of_linear_conflicts(state)*2
+        
+        
+    def number_of_linear_conflicts(self, state):
+        '''
+        Calculates the number of linear conflicts of a state
+        '''
+        state_tiles = state[0]
+        
+        def number_lc(state,line,row):
+            ''' given a line (0-3) return the number of linear conflicts in it
+                row = True means a row otherwise a column
+            '''
+            index_from = line * 4 if row else line%4
+            index_to = index_from + 4 if row else index_from+13
+            pass_range = 1 if row else 4
+            
+            linear_conflicts = 0
+            
+            for tile in range(index_from,index_to,pass_range):
+                for other_tile in range(index_from,index_to,pass_range):
+                    if tile != other_tile:
+                        goal_tile = self.solutionStates[0][0].index(state[tile])
+                        goal_other_tile = self.solutionStates[0][0].index(state[other_tile])
+                        if index_from <= goal_tile <= index_to and \
+                        index_from <= goal_other_tile <= index_to:
+                            # now check if tile is to the left of other_tile and its goal is to the right of
+                            # other_tile     
+                            if tile < other_tile and goal_tile > goal_other_tile:
+                                linear_conflicts += 1
+                                
+            return linear_conflicts
+                
+        linear_conflicts = 0
+        
+        for line in range(0,4):
+            linear_conflicts += number_lc(state_tiles, line, True)
+            linear_conflicts += number_lc(state_tiles, line, False)
+        
+        return linear_conflicts         
+
+    
     def successors(self, state):
       
         ''' 

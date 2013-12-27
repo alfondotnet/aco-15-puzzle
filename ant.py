@@ -31,9 +31,12 @@ class Ant(object):
         self.id = ant_id
         self.start_node_id = None # This is assigned on the start function of ACOProblem
         self.current_node_id = None # This is assigned on the start function of ACOProblem
-        self.solution_nodes_id = list() # This is assigned on the start function of ACOProblem
+        #self.solution_nodes_id = list() cambiar
+        self.solution_nodes_id = [1147797409030816545] # This is assigned on the start function of ACOProblem
         
         self.list_of_visited_nodes_id = list() # This is a list of visited nodes that each ant keeps (Tabu list)
+
+        self.ldn = list()
 
         # This may be cleared after a period of time (iterations)
         # TODO
@@ -53,6 +56,7 @@ class Ant(object):
 
         self.start_node_id = start_node_id
         self.current_node_id = start_node_id
+        self.list_of_visited_nodes_id.append(self.current_node_id)
 
         self.graph = graph
 
@@ -83,14 +87,41 @@ class Ant(object):
             on the path
         '''
 
-        # 
-        while self.current_node_id not in self.solution_nodes_id:
-            # caso chungo considera el nodo actual tmb (wtf??)
+        i = 0
+        while self.current_node_id not in self.solution_nodes_id:     
             
-            self.expand_node(self.current_node_id)
+            self.expand_node(self.current_node_id)      
+            
+            
+            
+            # Debug
+            # Fallos encontrados del debug:
+            # 1. vuelve por donde a venido, tenemos que poner q el inmediato anterior
+            # no lo visite!
+            
+#             print ("=========\nEstamos en "+ str(self.current_node_id))
+#             print ("Current: "+ str(self.aco_specific_problem.generateStateFromHash(self.current_node_id)))
+#             print ("Podemos ir a: \n\t"+ str([e[1] for e in self.graph.edges(self.current_node_id, data=True)]))
+#             print ("La tabla de decision es: \n\t" + str(self.decision_table(self.current_node_id)))
+#             print ("La tabla de nodos visitados es:\n\t" + str(self.list_of_visited_nodes_id))
+#             print ("La solucion: "+ str(self.aco_specific_problem.generateStateFromHash(self.solution_nodes_id[0])))
+#             print ("Sol id: "+ str(self.solution_nodes_id))
+#             print ("=======")
+#               
+#             raw_input()
+             
+            if len(self.list_of_visited_nodes_id) == 2:
+                self.list_of_visited_nodes_id = [self.current_node_id]
+            
+
+            if i != 0 and i % 100000 == 0:
+                print("\t Saliendo con "+ str(len(self.graph.node)) + " nodos")
+                return False
+            
             
             self.move_to_another_node()
-            
+            i += 1
+
         return True
     
     
@@ -115,6 +146,11 @@ class Ant(object):
             self.graph.node[successor_index]['node'] = ACONode(s)
             self.graph.add_edge(node_index_to_expand,successor_index, weight=self.aco_specific_problem.initial_tau)    
             
+            if self.aco_specific_problem.generateNodeHash(s) in self.solution_nodes_id:
+                
+                print("he expandido la solucion perro!!")
+                input()
+                
 
     def move_ant(self, node_index):
         ''' move_ant
@@ -147,59 +183,41 @@ class Ant(object):
 
         '''
         
-        # We first check if the node has already a decision table and return it instead
-        # Otherwise we calculate it, update it and return it
-        
         if node_index in self.decision_tables:
             return self.decision_tables[node_index]
         
         decision_table = dict() # This is going to be the dictonary of the decision table
-        
         edges_to_consider = self.graph.edges(self.current_node_id, data=True)
-        
-        # This is the denominator of the aij formulae
-        
+        numerator_list = list()
         summatory_denominator = 0
-        
-        for e in edges_to_consider:
-        
-            next_state = self.graph.node[e[1]]['node'].state
-            
-            ph = e[-1]['weight']
-            
-            if self.aco_specific_problem.calculate_cost(next_state) != 0:
-                nil = 1.0 / self.aco_specific_problem.calculate_cost(next_state)
-            else:
-                nil = sys.float_info.max
-            
-            summatory_denominator += math.pow(ph,self.aco_specific_problem.alpha) * math.pow(nil,self.aco_specific_problem.beta)
-        
-        # And now that we have calculated the denominator, we calculate each
-        # a sub ij
-            
+                  
         for edge in edges_to_consider:
-            
+                  
+            # esto habria que hacerlo en otro lado TODO
+            if edge[1] in self.list_of_visited_nodes_id:    
+                decision_table[edge[1]] = 0.0000003
+                continue
+                           
             next_state = self.graph.node[edge[1]]['node'].state
             pheromone = edge[-1]['weight'] # tau i,j
+            next_state_cost = self.aco_specific_problem.calculate_cost(next_state)
 
             # inverse of the cost of this potential new state
             # We check if the cost is 0 (hopefully) solution to avoid division by zero
-            if self.aco_specific_problem.calculate_cost(next_state) != 0:
-                nij = 1.0 / self.aco_specific_problem.calculate_cost(next_state)
+            if next_state_cost != 0:
+                nij = 1.0 / next_state_cost
             else:
                 nij = sys.maxint
                 
-            # This is the formulae for aij
-            aij = math.pow(pheromone,self.aco_specific_problem.alpha) * math.pow(nij,self.aco_specific_problem.beta)
-            # Now we normalize for the edges that the and hasnt visited in its
-            # working memory (can be configurated)
-            aij /= summatory_denominator 
-            
+            numerator = math.pow(pheromone,self.aco_specific_problem.alpha) * math.pow(nij,self.aco_specific_problem.beta)
+            numerator_list.append(numerator)      
+            summatory_denominator += numerator
+            decision_table[edge[1]] = numerator
 
-            decision_table[edge[1]] = aij
+        # We apply now the division of the numerators
+        decision_table.update((x,y/summatory_denominator) for x,y in decision_table.items())
 
         self.decision_tables[node_index] = decision_table
-        
         return decision_table
         
     def move_to_another_node(self):
@@ -222,36 +240,34 @@ class Ant(object):
         
         q = random.random()
         
+        # Proportional pseudo-random rule
+          
         if q <= self.aco_specific_problem.q0:
             
             # arg max aij
-
-            next_node = max(self.decision_table(self.current_node_id).iteritems(), key=operator.itemgetter(1))[0]
-            
+            decision_table = self.decision_table(self.current_node_id)
+            next_node = max(decision_table.iteritems(), key=operator.itemgetter(1))[0]
             self.move_ant(next_node)
         
-        else:
-            
+        else:      
             # Otherwise, we create a list of probabilities
 
             proportion_list = dict()
             
             edges_to_consider = self.graph.edges(self.current_node_id, data=True)
-            edges_not_in_working_memory = [e for e in edges_to_consider if e not in self.working_memory]
+            edges_in_working_memory = [e for e in edges_to_consider if e[1] not in self.list_of_visited_nodes_id]
             
             summatory_denominator = 0
+            decision_table = self.decision_table(self.current_node_id)
             
-            for e in edges_not_in_working_memory:
+            for e in edges_in_working_memory:    
+                summatory_denominator += decision_table[e[1]]
+            
+            
+            for node in decision_table.keys():
+                proportion_list[node] = decision_table[node] / summatory_denominator
                 
-                summatory_denominator += self.decision_table(self.current_node_id)[e[1]]
-            
-            
-            
-            for node in self.decision_table(self.current_node_id).keys():
                 
-                proportion_list[node] = self.decision_table(self.current_node_id)[node] / summatory_denominator
-                
-            
             self.move_ant(self.get_prop_random_node(proportion_list))
 
     def get_prop_random_node(self, prop_list):
@@ -270,6 +286,7 @@ class Ant(object):
          
             if prop_list[node] + acc > rand:
                 node_ret = node
+                break
             acc += prop_list[node]
             
         return node_ret

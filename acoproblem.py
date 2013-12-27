@@ -94,19 +94,19 @@ class ACOProblem(object):
         
         # Now we place final and initial nodes
                 
-        for s in self.solutionStates:
-            
-            node_index = self.generateNodeHash(s)
-            
-            self.graph.add_node(node_index)   
-            self.graph.node[node_index]['node'] = ACONode(s, True) # Solution node
-            self.graph.node[node_index]['solution'] = True
-            self.graph.node[node_index]['initial'] = False
+#         for s in self.solutionStates:
+#             
+#             node_index = self.generateNodeHash(s)
+#             
+#             self.graph.add_node(node_index)   
+#             self.graph.node[node_index]['node'] = ACONode(s, True) # Solution node
+#             self.graph.node[node_index]['solution'] = True
+#             self.graph.node[node_index]['initial'] = False
             
             # Pass this node to every ant
-            
-            for ant in self.colony.ants:   
-                ant.solution_nodes_id.append(node_index)
+#             
+#             for ant in self.colony.ants:   
+#                 ant.solution_nodes_id.append(node_index)
             
         for s in self.initialStates:
             
