@@ -32,7 +32,7 @@ class ACOProblem(object):
         self.q0 = q0 # Parameter of the problem. Indicates the tendency of the ants of exploring or following another ants
         self.graph = None
         self.number_of_ants = number_of_ants
-        self.colony = Colony(number_of_ants)  # We create a Colony with n Ants
+        self.colony = Colony(self.number_of_ants)  # We create a Colony with n Ants
         
         self.initial_tau = 1
         self.globalSolution = None
@@ -152,7 +152,7 @@ class ACOProblem(object):
             assigned_ant_id = ants_id_list.pop()
             assigned_initial_state = choice(range(0,len(self.initialStates)))
             
-            self.colony.ants[assigned_ant_id].set_start_node(assigned_initial_state, self.graph)
+            self.colony.ants[assigned_ant_id].set_start_node(self.generateNodeHash(self.initialStates[assigned_initial_state]), self.graph)
 
 
     def generateAntSolutions(self):
@@ -176,27 +176,32 @@ class ACOProblem(object):
         for w in consumers:
             w.start()
         
-        # Now we tell all the ants to go find some food
-        
-        num_tasks = 0
-        
-        for ant in self.colony.ants:
-            tasks.put(ant)
-            num_tasks += 1
-        
-        # Add a poison pill for each consumer
-    
-        for _ in range(num_consumers):
-            tasks.put(None)
-        
-        # We wait now for all the ants to finish
-        
-        tasks.join() 
-        results_list = list()
-        
-        for _ in range(num_tasks):
-        
-            results_list.append(results.get())
+        while True:
+            # Now we tell all the ants to go find some food
+            num_tasks = 0
+            
+            self.start()
+            
+            for ant in self.colony.ants:
+                tasks.put(ant)
+                num_tasks += 1
+            
+            # We wait now for all the ants to finish
+            
+            tasks.join() 
+            results_list = list()
+            
+            for _ in range(num_tasks):
+            
+                results_list.append(results.get())
+                
+            if results_list != [False for _ in range(self.number_of_ants)]:
+                
+                # Add a poison pill for each consumer
+                for _ in range(num_consumers):
+                    tasks.put(None)
+                
+                break
             
         return results_list
         

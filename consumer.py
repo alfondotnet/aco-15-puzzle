@@ -28,7 +28,7 @@ class Consumer(multiprocessing.Process):
             if next_task is None:
                 
                 # Poison pill means shutdown
-                print ("soy "+ proc_name + " y estoy saliendo!")
+                #print ("soy "+ proc_name + " y estoy saliendo!")
                 self.task_queue.task_done()
                 break
 

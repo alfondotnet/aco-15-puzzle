@@ -1,3 +1,4 @@
+from __future__ import division
 import networkx as nx
 from aconode import ACONode
 import random
@@ -36,7 +37,8 @@ class Ant(object):
         
         #self.solution_nodes_id = list() cambiar
         self.solution_nodes_id = [1147797409030816545] # This is assigned on the start function of ACOProblem
-
+        # julian
+        # juliian -> self.solution_nodes_id = [15659555090190240900]
         self.possible_new_edges = list()
         
         self.decision_tables = dict() # Decision tables for different nodes
@@ -81,34 +83,36 @@ class Ant(object):
         '''
 
         i = 0
-        print(self)
+        cota_de_salida = 90
+        #print(self)
         while self.current_node_id not in self.solution_nodes_id:     
             
             self.expand_node(self.current_node_id)      
             
             
-            
-            # Debug
-            # Fallos encontrados del debug:
-            # 1. vuelve por donde a venido, tenemos que poner q el inmediato anterior
-            # no lo visite!
-               
-            #print ("=========\nEstamos en "+ str(self.current_node_id))
-            #print ("Current: "+ str(self.aco_specific_problem.generateStateFromHash(self.current_node_id)))
-            #print ("Podemos ir a: \n\t"+ str(self.possible_new_edges))
-            #print("Tabla de costes: "+ str([(self.aco_specific_problem.generateNodeHash(s),self.aco_specific_problem.calculate_cost(s)) for s in self.aco_specific_problem.successors(self.graph.node[self.current_node_id]['node'].state) if self.last_node_id != self.aco_specific_problem.generateNodeHash(s)]))
-            #print ("La tabla de decision es: \n\t" + str(self.decision_table(self.current_node_id)))
-            #print ("La solucion: "+ str(self.aco_specific_problem.generateStateFromHash(self.solution_nodes_id[0])))
-            #print ("Sol id: "+ str(self.solution_nodes_id))
-            #print ("=======")
-                   
-            #raw_input()
+#             
+#              Debug
+#              Fallos encontrados del debug:
+#              1. vuelve por donde a venido, tenemos que poner q el inmediato anterior
+#              no lo visite!
+#                
+#             print ("=========\nEstamos en "+ str(self.current_node_id))
+#             print ("Current: "+ str(self.aco_specific_problem.generateStateFromHash(self.current_node_id)))
+#             print ("Podemos ir a: \n\t"+ str(self.possible_new_edges))
+#             print("Tabla de costes: "+ str([(self.aco_specific_problem.generateNodeHash(s),self.aco_specific_problem.calculate_cost(s)) for s in self.aco_specific_problem.successors(self.graph.node[self.current_node_id]['node'].state) if self.last_node_id != self.aco_specific_problem.generateNodeHash(s)]))
+#             print ("La tabla de decision es: \n\t" + str(self.decision_table(self.current_node_id)))
+#             print ("La solucion: "+ str(self.aco_specific_problem.generateStateFromHash(self.solution_nodes_id[0])))
+#             print ("Sol id: "+ str(self.solution_nodes_id))
+#             print ("=======")
+#                    
+#             raw_input()
 
 
             self.move_to_another_node()
                
-            if i != 0 and i % 1000 == 0:
-                print("\t Saliendo con "+ str(len(self.graph.node)) + " nodos")
+            if i != 0 and i % cota_de_salida == 0:
+                #print("\t Cota de salida: "+ str(cota_de_salida))
+                #print("\t Saliendo con "+ str(len(self.graph.node)) + " nodos")
                 return False
             i += 1
 
@@ -170,7 +174,6 @@ class Ant(object):
         '''
 
         decision_table = dict() 
-        numerator_list = list()
         summatory_denominator = 0
                   
         for edge in self.possible_new_edges:
@@ -187,13 +190,12 @@ class Ant(object):
                 nij = sys.maxint
                 
             numerator = math.pow(pheromone,self.aco_specific_problem.alpha) * math.pow(nij,self.aco_specific_problem.beta)
-            numerator_list.append(numerator)      
             summatory_denominator += numerator
             decision_table[edge[1]] = numerator
 
         # We apply now the division of the numerators
 
-        decision_table.update((x,y/summatory_denominator) for x,y in decision_table.items() if y != 0.0000003)
+        decision_table.update((x,y/summatory_denominator) for x,y in decision_table.items())    
 
         self.decision_tables[node_index] = decision_table
         return decision_table
@@ -218,7 +220,7 @@ class Ant(object):
         '''
         
         q = random.random()
-        
+
         # Proportional pseudo-random rule
           
         if q <= self.aco_specific_problem.q0:

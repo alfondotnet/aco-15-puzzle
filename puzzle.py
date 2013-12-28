@@ -51,7 +51,6 @@ class Puzzle(ACOProblem):
             val = state_tiles[i]
             idx |= val << (i * 4)
 
-
         return idx       
           
 
