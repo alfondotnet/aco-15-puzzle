@@ -94,21 +94,22 @@ class Ant(object):
             # 1. vuelve por donde a venido, tenemos que poner q el inmediato anterior
             # no lo visite!
                
-#             print ("=========\nEstamos en "+ str(self.current_node_id))
-#             print ("Current: "+ str(self.aco_specific_problem.generateStateFromHash(self.current_node_id)))
-#             print ("Podemos ir a: \n\t"+ str(self.possible_new_edges))
-#             print ("La tabla de decision es: \n\t" + str(self.decision_table(self.current_node_id)))
-#             print ("La solucion: "+ str(self.aco_specific_problem.generateStateFromHash(self.solution_nodes_id[0])))
-#             print ("Sol id: "+ str(self.solution_nodes_id))
-#             print ("=======")
-#                   
-#             raw_input()
+            #print ("=========\nEstamos en "+ str(self.current_node_id))
+            #print ("Current: "+ str(self.aco_specific_problem.generateStateFromHash(self.current_node_id)))
+            #print ("Podemos ir a: \n\t"+ str(self.possible_new_edges))
+            #print("Tabla de costes: "+ str([(self.aco_specific_problem.generateNodeHash(s),self.aco_specific_problem.calculate_cost(s)) for s in self.aco_specific_problem.successors(self.graph.node[self.current_node_id]['node'].state) if self.last_node_id != self.aco_specific_problem.generateNodeHash(s)]))
+            #print ("La tabla de decision es: \n\t" + str(self.decision_table(self.current_node_id)))
+            #print ("La solucion: "+ str(self.aco_specific_problem.generateStateFromHash(self.solution_nodes_id[0])))
+            #print ("Sol id: "+ str(self.solution_nodes_id))
+            #print ("=======")
+                   
+            #raw_input()
 
 
             self.move_to_another_node()
                
             if i != 0 and i % 50000 == 0:
-                print("\t Saliendo con "+ str(len(self.graph.node)) + " nodos")
+                #print("\t Saliendo con "+ str(len(self.graph.node)) + " nodos")
                 return False
             i += 1
 
@@ -139,7 +140,7 @@ class Ant(object):
     
             if self.aco_specific_problem.generateNodeHash(s) in self.solution_nodes_id:
                 
-                print("he expandido la solucion perro!!")
+                #print("he expandido la solucion perro!!")
                 input()
                 
 
@@ -196,7 +197,7 @@ class Ant(object):
             decision_table[edge[1]] = numerator
 
         # We apply now the division of the numerators
-        print(decision_table,summatory_denominator)
+
         decision_table.update((x,y/summatory_denominator) for x,y in decision_table.items() if y != 0.0000003)
 
         self.decision_tables[node_index] = decision_table
@@ -226,7 +227,7 @@ class Ant(object):
         # Proportional pseudo-random rule
           
         if q <= self.aco_specific_problem.q0:
-            # Exploitation
+            #print("Exploitation")
             # arg max aij
             
             decision_table = self.decision_table(self.current_node_id)
@@ -236,7 +237,7 @@ class Ant(object):
         
         else:      
             # Otherwise, we create a list of probabilities
-            # Exploration
+            #print("Exploration")
             
             proportion_list = dict()    
             summatory_denominator = 0

@@ -16,7 +16,7 @@ while True:
     
     ratio_de_evaporacion = 0.89
     
-    p1 = Puzzle(inicio, fin, 0.3, 0.7, 8, ratio_de_evaporacion, 0.4)
+    p1 = Puzzle(inicio, fin, 0.1, 0.9, 8, ratio_de_evaporacion, 0.7)
     p1.start()
     
     hormiga = p1.colony.ants[0]
