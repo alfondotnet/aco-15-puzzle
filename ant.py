@@ -39,8 +39,6 @@ class Ant(object):
 
         self.possible_new_edges = list()
         
-
-   
         self.decision_tables = dict() # Decision tables for different nodes
         
         self.aco_specific_problem = None # It's going to be passed by the specific aco problem in the __init__ so the ant knows
@@ -83,6 +81,7 @@ class Ant(object):
         '''
 
         i = 0
+        print(self)
         while self.current_node_id not in self.solution_nodes_id:     
             
             self.expand_node(self.current_node_id)      
@@ -108,12 +107,12 @@ class Ant(object):
 
             self.move_to_another_node()
                
-            if i != 0 and i % 50000 == 0:
-                #print("\t Saliendo con "+ str(len(self.graph.node)) + " nodos")
+            if i != 0 and i % 1000 == 0:
+                print("\t Saliendo con "+ str(len(self.graph.node)) + " nodos")
                 return False
             i += 1
 
-        return True
+        return self.graph
     
     
     def expand_node(self, node_index_to_expand):
@@ -130,19 +129,16 @@ class Ant(object):
         successors = self.aco_specific_problem.successors(node_to_expand.state)
 
         for s in successors:
-            
             successor_index = self.aco_specific_problem.generateNodeHash(s)
             
             self.graph.add_node(successor_index)
             self.graph.node[successor_index]['node'] = ACONode(s)
+            # TODO: Para cuando una hormiga trabaje un mirar el tau
             self.graph.add_edge(node_index_to_expand,successor_index, weight=self.aco_specific_problem.initial_tau)    
             self.possible_new_edges = [(n1,n2,e) for (n1,n2,e) in self.graph.edges(self.current_node_id, data=True) if n2 != self.last_node_id]
     
-            if self.aco_specific_problem.generateNodeHash(s) in self.solution_nodes_id:
-                
-                #print("he expandido la solucion perro!!")
-                input()
-                
+            if self.aco_specific_problem.generateNodeHash(s) in self.solution_nodes_id:                
+                print("he expandido la solucion perro!!")
 
     def move_ant(self, node_index):
         ''' move_ant
@@ -183,7 +179,6 @@ class Ant(object):
             pheromone = edge[-1]['weight'] # tau i,j
             next_state_cost = self.aco_specific_problem.calculate_cost(next_state)
 
- 
             # inverse of the cost of this potential new state
             # We check if the cost is 0 (hopefully) solution to avoid division by zero
             if next_state_cost != 0:

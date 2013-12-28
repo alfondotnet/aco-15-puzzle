@@ -171,7 +171,7 @@ class ACOProblem(object):
         # Start consumers
         
         num_consumers = multiprocessing.cpu_count() * 2
-        consumers = [ Consumer(tasks, results) for i in range(num_consumers) ]  
+        consumers = [ Consumer(tasks, results) for _ in range(num_consumers) ]  
         
         for w in consumers:
             w.start()
@@ -186,7 +186,7 @@ class ACOProblem(object):
         
         # Add a poison pill for each consumer
     
-        for i in range(num_consumers):
+        for _ in range(num_consumers):
             tasks.put(None)
         
         # We wait now for all the ants to finish
@@ -198,7 +198,7 @@ class ACOProblem(object):
         
             results_list.append(results.get())
             
-        print (results_list)
+        return results_list
         
         
             
