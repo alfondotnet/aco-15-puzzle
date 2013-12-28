@@ -105,8 +105,7 @@ class Puzzle(ACOProblem):
             return abs(ij2[0] - ij1[0]) + abs(ij2[1] - ij1[1])
     
         for i in range(16):
-
-            cost += distance_between_array_indexes(solution[0][i], state[0][i])
+            cost += distance_between_array_indexes(solution[0].index(state[0][i]), i)
         
         return cost + self.number_of_linear_conflicts(state)*2
         

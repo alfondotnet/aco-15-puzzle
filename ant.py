@@ -31,22 +31,18 @@ class Ant(object):
         self.id = ant_id
         self.start_node_id = None # This is assigned on the start function of ACOProblem
         self.current_node_id = None # This is assigned on the start function of ACOProblem
+        
+        self.last_node_id = None # Last node where we were
+        
         #self.solution_nodes_id = list() cambiar
         self.solution_nodes_id = [1147797409030816545] # This is assigned on the start function of ACOProblem
-        
-        self.list_of_visited_nodes_id = list() # This is a list of visited nodes that each ant keeps (Tabu list)
 
-        self.ldn = list()
+        self.possible_new_edges = list()
+        
 
-        # This may be cleared after a period of time (iterations)
-        # TODO
-        #self.length_of_ant_memory = ...
-        
-        
+   
         self.decision_tables = dict() # Decision tables for different nodes
         
-        self.working_memory = list() # This is a list of edges
-
         self.aco_specific_problem = None # It's going to be passed by the specific aco problem in the __init__ so the ant knows
         # How to expand the graph, the parameters of the problem and so on
  
@@ -56,8 +52,7 @@ class Ant(object):
 
         self.start_node_id = start_node_id
         self.current_node_id = start_node_id
-        self.list_of_visited_nodes_id.append(self.current_node_id)
-
+        self.last_node_id = None
         self.graph = graph
 
         
@@ -98,28 +93,23 @@ class Ant(object):
             # Fallos encontrados del debug:
             # 1. vuelve por donde a venido, tenemos que poner q el inmediato anterior
             # no lo visite!
-            
+               
 #             print ("=========\nEstamos en "+ str(self.current_node_id))
 #             print ("Current: "+ str(self.aco_specific_problem.generateStateFromHash(self.current_node_id)))
-#             print ("Podemos ir a: \n\t"+ str([e[1] for e in self.graph.edges(self.current_node_id, data=True)]))
+#             print ("Podemos ir a: \n\t"+ str(self.possible_new_edges))
 #             print ("La tabla de decision es: \n\t" + str(self.decision_table(self.current_node_id)))
-#             print ("La tabla de nodos visitados es:\n\t" + str(self.list_of_visited_nodes_id))
 #             print ("La solucion: "+ str(self.aco_specific_problem.generateStateFromHash(self.solution_nodes_id[0])))
 #             print ("Sol id: "+ str(self.solution_nodes_id))
 #             print ("=======")
-#               
+#                   
 #             raw_input()
-             
-            if len(self.list_of_visited_nodes_id) == 2:
-                self.list_of_visited_nodes_id = [self.current_node_id]
-            
 
-            if i != 0 and i % 100000 == 0:
+
+            self.move_to_another_node()
+               
+            if i != 0 and i % 50000 == 0:
                 print("\t Saliendo con "+ str(len(self.graph.node)) + " nodos")
                 return False
-            
-            
-            self.move_to_another_node()
             i += 1
 
         return True
@@ -145,7 +135,8 @@ class Ant(object):
             self.graph.add_node(successor_index)
             self.graph.node[successor_index]['node'] = ACONode(s)
             self.graph.add_edge(node_index_to_expand,successor_index, weight=self.aco_specific_problem.initial_tau)    
-            
+            self.possible_new_edges = [(n1,n2,e) for (n1,n2,e) in self.graph.edges(self.current_node_id, data=True) if n2 != self.last_node_id]
+    
             if self.aco_specific_problem.generateNodeHash(s) in self.solution_nodes_id:
                 
                 print("he expandido la solucion perro!!")
@@ -163,11 +154,9 @@ class Ant(object):
             first for efficiency that the node where the ant is going has not been visited already
         '''
         
+        self.last_node_id = self.current_node_id
         self.current_node_id = node_index
         
-        if node_index not in self.list_of_visited_nodes_id:
-            self.list_of_visited_nodes_id.append(node_index)
-    
     def decision_table(self, node_index):
         
         ''' decision table
@@ -182,26 +171,18 @@ class Ant(object):
             Given the index of a node, calculates and/or returns the decision table for the node.
 
         '''
-        
-        if node_index in self.decision_tables:
-            return self.decision_tables[node_index]
-        
-        decision_table = dict() # This is going to be the dictonary of the decision table
-        edges_to_consider = self.graph.edges(self.current_node_id, data=True)
+
+        decision_table = dict() 
         numerator_list = list()
         summatory_denominator = 0
                   
-        for edge in edges_to_consider:
-                  
-            # esto habria que hacerlo en otro lado TODO
-            if edge[1] in self.list_of_visited_nodes_id:    
-                decision_table[edge[1]] = 0.0000003
-                continue
-                           
+        for edge in self.possible_new_edges:
+         
             next_state = self.graph.node[edge[1]]['node'].state
             pheromone = edge[-1]['weight'] # tau i,j
             next_state_cost = self.aco_specific_problem.calculate_cost(next_state)
 
+ 
             # inverse of the cost of this potential new state
             # We check if the cost is 0 (hopefully) solution to avoid division by zero
             if next_state_cost != 0:
@@ -215,10 +196,12 @@ class Ant(object):
             decision_table[edge[1]] = numerator
 
         # We apply now the division of the numerators
-        decision_table.update((x,y/summatory_denominator) for x,y in decision_table.items())
+        print(decision_table,summatory_denominator)
+        decision_table.update((x,y/summatory_denominator) for x,y in decision_table.items() if y != 0.0000003)
 
         self.decision_tables[node_index] = decision_table
         return decision_table
+        
         
     def move_to_another_node(self):
         
@@ -243,31 +226,28 @@ class Ant(object):
         # Proportional pseudo-random rule
           
         if q <= self.aco_specific_problem.q0:
-            
+            # Exploitation
             # arg max aij
+            
             decision_table = self.decision_table(self.current_node_id)
             next_node = max(decision_table.iteritems(), key=operator.itemgetter(1))[0]
             self.move_ant(next_node)
         
+        
         else:      
             # Otherwise, we create a list of probabilities
-
-            proportion_list = dict()
+            # Exploration
             
-            edges_to_consider = self.graph.edges(self.current_node_id, data=True)
-            edges_in_working_memory = [e for e in edges_to_consider if e[1] not in self.list_of_visited_nodes_id]
-            
+            proportion_list = dict()    
             summatory_denominator = 0
             decision_table = self.decision_table(self.current_node_id)
             
-            for e in edges_in_working_memory:    
+            for e in self.possible_new_edges:    
                 summatory_denominator += decision_table[e[1]]
-            
             
             for node in decision_table.keys():
                 proportion_list[node] = decision_table[node] / summatory_denominator
-                
-                
+                         
             self.move_ant(self.get_prop_random_node(proportion_list))
 
     def get_prop_random_node(self, prop_list):
