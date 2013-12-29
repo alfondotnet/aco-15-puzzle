@@ -13,7 +13,6 @@ acoproblem.py
 
 '''
 
-
 class ACOProblem(object):
       
     '''Generic class for a generic ACOProblem'''
@@ -35,7 +34,8 @@ class ACOProblem(object):
         self.colony = Colony(self.number_of_ants)  # We create a Colony with n Ants
         
         self.initial_tau = 1
-        self.globalSolution = None
+        
+        self.global_best_solution = None
         
 
     def generateNodeHash(self, state):
@@ -46,15 +46,15 @@ class ACOProblem(object):
         each node of the graph
         '''
         
-    def objectiveFunction(self):
+    def objective_function(self, solution):
         raise NotImplementedError()
         '''
         To implement:
         Returns the objective function image associated with a particular
-        ACOProblem
+        ACOProblem solution
         '''
     
-    def endCondition(self):
+    def end_condition(self):
         raise NotImplementedError()
     
         '''
@@ -93,20 +93,6 @@ class ACOProblem(object):
         self.graph = nx.Graph()
         
         # Now we place final and initial nodes
-                
-#         for s in self.solutionStates:
-#             
-#             node_index = self.generateNodeHash(s)
-#             
-#             self.graph.add_node(node_index)   
-#             self.graph.node[node_index]['node'] = ACONode(s, True) # Solution node
-#             self.graph.node[node_index]['solution'] = True
-#             self.graph.node[node_index]['initial'] = False
-            
-            # Pass this node to every ant
-#             
-#             for ant in self.colony.ants:   
-#                 ant.solution_nodes_id.append(node_index)
             
         for s in self.initialStates:
             
@@ -180,8 +166,6 @@ class ACOProblem(object):
             # Now we tell all the ants to go find some food
             num_tasks = 0
             
-            #print(self.colony)
-            
             self.start()
 
   
@@ -229,12 +213,23 @@ class ACOProblem(object):
             This is the ACO Algorithm itself
             
         '''
-            
-        if self.graph == None: 
-            raise Exception("The problem must be started first!")
         
+        print ("ACO Problem initialized.")
         
-        while not(self.endCondition()):
+        while not(self.end_condition()):
         
+            print("\t Generating ANT Solutions...")
             solutions = self.generateAntSolutions()
+            print("\t Found "+ str(len(solutions)) + " solutions")
+            
+            # We see if any of our solutions is better than the best so far
+            for sol in solutions:
+                print("\t Solution of value: "+ str(self.objective_function(sol)))
+                
+                if self.objective_function(sol) < self.objective_function(self.global_best_solution):
+                    self.global_best_solution = sol
+                    print("\t Global solution improved!")
+                
+            print ("Updating pheromone...")
             self.pheromoneUpdate()
+            

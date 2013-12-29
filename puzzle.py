@@ -1,5 +1,6 @@
 from acoproblem import ACOProblem
 import random
+import sys
 
 '''
 puzzle.py
@@ -35,12 +36,27 @@ class Puzzle(ACOProblem):
         self.ba1 = bytearray(self.c1.read())
         self.ba2 = bytearray(self.c2.read())
 
-    def endCondition(self):
+
+    def objective_function(self, solution):
+        '''
+        objective_function
+        Parameters:
+        none
+        
+        Here we calculate the objective function of our problem. This is the function
+        we want to optimize (minimize). In this case it will be the length of the solution
+        '''
+        if solution == None:
+            return sys.maxint
+        else:
+            return len(solution)
+
+    def end_condition(self):
         '''
         Here we have to determine when we have to end.
         '''
         # TODO
-        return self.globalSolution < 30
+        return self.global_best_solution != None and len(self.global_best_solution) < 40 
     
     def generateNodeHash(self, state):
         

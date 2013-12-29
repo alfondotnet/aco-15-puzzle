@@ -31,14 +31,10 @@ class Ant(object):
         
         self.id = ant_id
         self.start_node_id = None # This is assigned on the start function of ACOProblem
-        self.current_node_id = None # This is assigned on the start function of ACOProblem
-        
+        self.current_node_id = None # This is assigned on the start function of ACOProblem   
         self.last_node_id = None # Last node where we were
-        
-        #self.solution_nodes_id = list() cambiar
         self.solution_nodes_id = [1147797409030816545] # This is assigned on the start function of ACOProblem
-        # julian
-        # juliian -> self.solution_nodes_id = [15659555090190240900]
+
         self.possible_new_edges = list()
         
         self.decision_tables = dict() # Decision tables for different nodes
@@ -47,6 +43,9 @@ class Ant(object):
         # How to expand the graph, the parameters of the problem and so on
  
         self.graph = None # The initial subgraph is passed from ACOProblem to the set_start_node method
+        self.solution_found = None # This is set in expand_node so move_to_another_ant goes there.
+        
+        self.list_nodes_visited = None
     
     def set_start_node(self, start_node_id, graph):
 
@@ -55,6 +54,8 @@ class Ant(object):
         self.last_node_id = None
         self.graph = graph
         self.decision_tables = dict()
+        self.list_nodes_visited = list()
+        self.list_nodes_visited.append(self.current_node_id)
 
         
     def __str__(self):
@@ -116,10 +117,11 @@ class Ant(object):
                 #print("\t Cota de salida: "+ str(cota_de_salida))
                 #print("\t Saliendo con "+ str(len(self.graph.node)) + " nodos")
                 #print (str(self.id)+" Saliendo en "+ str(self.current_node_id))
-                return (self.graph,False)
+                return (None,False)
             i += 1
-
-        return (self.graph,True)
+        
+        # If we have found a solution, we return the list of nodes visited
+        return (self.list_nodes_visited,True)
     
     
     def expand_node(self, node_index_to_expand):
@@ -140,12 +142,13 @@ class Ant(object):
             
             self.graph.add_node(successor_index)
             self.graph.node[successor_index]['node'] = ACONode(s)
+            
             # TODO: Para cuando una hormiga trabaje un mirar el tau
             self.graph.add_edge(node_index_to_expand,successor_index, weight=self.aco_specific_problem.initial_tau)    
             self.possible_new_edges = [(n1,n2,e) for (n1,n2,e) in self.graph.edges(self.current_node_id, data=True) if n2 != self.last_node_id]
     
             if self.aco_specific_problem.generateNodeHash(s) in self.solution_nodes_id:                
-                print("he expandido la solucion perro!!")
+                self.solution_found = self.aco_specific_problem.generateNodeHash(s)
 
     def move_ant(self, node_index):
         ''' move_ant
@@ -160,6 +163,8 @@ class Ant(object):
         
         self.last_node_id = self.current_node_id
         self.current_node_id = node_index
+        
+        self.list_nodes_visited.append(node_index)
         
     def decision_table(self, node_index):
         
@@ -221,7 +226,10 @@ class Ant(object):
             efficacy (eg. Heuristic)
         
         '''
-        
+        # If the solution is next, just go to it.
+        if self.solution_found != None:
+            self.move_ant(self.solution_found)
+           
         q = random.random()
 
         # Proportional pseudo-random rule
