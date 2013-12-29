@@ -54,11 +54,13 @@ class Ant(object):
         self.current_node_id = start_node_id
         self.last_node_id = None
         self.graph = graph
+        self.decision_tables = dict()
 
         
     def __str__(self):
         
-        ant_to_string = "[ Ant no:"+ str(self.id) + ", Start node: "+ str(self.start_node_id)
+        ant_to_string = str(id(self))
+        ant_to_string += " [ Ant no:"+ str(self.id) + ", Start node: "+ str(self.start_node_id)
         ant_to_string += ", Current node: " + str(self.current_node_id) +" ]"
         ant_to_string += " Solution nodes list: "+ str(self.solution_nodes_id)
 
@@ -83,7 +85,7 @@ class Ant(object):
         '''
 
         i = 0
-        cota_de_salida = 90
+        cota_de_salida = 110
         #print(self)
         while self.current_node_id not in self.solution_nodes_id:     
             
@@ -104,7 +106,7 @@ class Ant(object):
 #             print ("La solucion: "+ str(self.aco_specific_problem.generateStateFromHash(self.solution_nodes_id[0])))
 #             print ("Sol id: "+ str(self.solution_nodes_id))
 #             print ("=======")
-#                    
+#                     
 #             raw_input()
 
 
@@ -113,10 +115,11 @@ class Ant(object):
             if i != 0 and i % cota_de_salida == 0:
                 #print("\t Cota de salida: "+ str(cota_de_salida))
                 #print("\t Saliendo con "+ str(len(self.graph.node)) + " nodos")
-                return False
+                #print (str(self.id)+" Saliendo en "+ str(self.current_node_id))
+                return (self.graph,False)
             i += 1
 
-        return self.graph
+        return (self.graph,True)
     
     
     def expand_node(self, node_index_to_expand):

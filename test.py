@@ -19,17 +19,19 @@ fin = ([1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,0],15)
 
 
 i=0
-nants = 20
+nants = 100
+
 while True:
     
     ratio_de_evaporacion = 0.89
     cota = 0.8
-    #print ("===COTA : "+ str(cota) + "=================")
+
     p1 = Puzzle(inicio, fin, 1, 1, nants, ratio_de_evaporacion, cota)
+
+    
     sols = p1.generateAntSolutions()
     
     
-    #print (sols)
     if sols != [False for _ in range(len(p1.colony.ants))]:
         print ("Sol encontrada.")
         

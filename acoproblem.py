@@ -180,8 +180,11 @@ class ACOProblem(object):
             # Now we tell all the ants to go find some food
             num_tasks = 0
             
-            self.start()
+            #print(self.colony)
             
+            self.start()
+
+  
             for ant in self.colony.ants:
                 tasks.put(ant)
                 num_tasks += 1
@@ -195,15 +198,15 @@ class ACOProblem(object):
             
                 results_list.append(results.get())
                 
-            if results_list != [False for _ in range(self.number_of_ants)]:
+
+            if [r[1] for r in results_list] != [False for _ in range(len(results_list))]:
                 
                 # Add a poison pill for each consumer
                 for _ in range(num_consumers):
-                    tasks.put(None)
-                
+                    tasks.put(None) 
                 break
-            
-        return results_list
+    
+        return [r for (r,b) in results_list if b != False] 
         
         
             
