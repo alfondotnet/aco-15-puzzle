@@ -143,8 +143,9 @@ class Ant(object):
             self.graph.add_node(successor_index)
             self.graph.node[successor_index]['node'] = ACONode(s)
             
-            # TODO: Para cuando una hormiga trabaje un mirar el tau
+            # TODO -------------> LO DE ABAJO (CUIDADO)
             self.graph.add_edge(node_index_to_expand,successor_index, weight=self.aco_specific_problem.initial_tau)    
+            
             self.possible_new_edges = [(n1,n2,e) for (n1,n2,e) in self.graph.edges(self.current_node_id, data=True) if n2 != self.last_node_id]
     
             if self.aco_specific_problem.generateNodeHash(s) in self.solution_nodes_id:                
