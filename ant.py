@@ -45,7 +45,7 @@ class Ant(object):
         self.graph = None # The initial subgraph is passed from ACOProblem to the set_start_node method
         self.solution_found = None # This is set in expand_node so move_to_another_ant goes there.
         
-        self.list_nodes_visited = None
+        self.list_nodes_visited = None # List of node indexes visited
     
     def set_start_node(self, start_node_id, graph):
 
@@ -120,8 +120,8 @@ class Ant(object):
                 return (None,False)
             i += 1
         
-        # If we have found a solution, we return the list of nodes visited
-        return (self.list_nodes_visited,True)
+        # Returns a path of nodes in order
+        return ([(node_index,self.graph.node[node_index]) for node_index in self.list_nodes_visited],True)
     
     
     def expand_node(self, node_index_to_expand):

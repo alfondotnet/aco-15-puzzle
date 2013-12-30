@@ -18,9 +18,9 @@ class Puzzle(ACOProblem):
     So, our state is a pair ([state],hole)
     '''
     
-    def __init__(self, initialPieces, solution, alpha, beta, number_of_ants, p, q0):
+    def __init__(self, initialPieces, solution, alpha, beta, number_of_ants, p, q0, base_attractiveness):
         
-        super(Puzzle, self).__init__([initialPieces], [solution], alpha, beta, number_of_ants, p, q0)
+        super(Puzzle, self).__init__([initialPieces], [solution], alpha, beta, number_of_ants, p, q0, base_attractiveness)
         
         # Now we pass the self to every ant so they know how to expand the graph.
         
@@ -57,6 +57,21 @@ class Puzzle(ACOProblem):
         '''
         # TODO
         return self.global_best_solution != None and len(self.global_best_solution) < 40 
+
+            
+    def pheromone_update_criteria(self, solution):
+        ''' 
+            pheromone_update_criteria
+            Parameters:
+            none
+            Given a solution
+            Returns the new pheromone associated for that solution
+        '''
+
+        # Being a solution a list of nodes
+        
+        return self.base_attractiveness / len(solution)
+
     
     def generateNodeHash(self, state):
         
