@@ -34,11 +34,11 @@ class ACOProblem(object):
         self.number_of_ants = number_of_ants
         self.colony = Colony(self.number_of_ants)  # We create a Colony with n Ants
         
-        self.initial_tau = 1
+        self.initial_tau = 0.1
         
         self.global_best_solution = None
 
-    def generateNodeHash(self, state):
+    def generate_node_hash(self, state):
         raise NotImplementedError()
         '''
         To override:
@@ -101,7 +101,7 @@ class ACOProblem(object):
             
         for s in self.initial_states:
             
-            node_index = self.generateNodeHash(s)
+            node_index = self.generate_node_hash(s)
             
             self.graph.add_node(node_index)
             self.graph.node[node_index]['node'] = ACONode(s, False, True) # Initial node
@@ -136,7 +136,7 @@ class ACOProblem(object):
                 for s in self.initial_states:
                     
                     assigned_ant_id = ants_id_list.pop()
-                    initial_node_id = self.generateNodeHash(s)
+                    initial_node_id = self.generate_node_hash(s)
                     
                     self.colony.ants[assigned_ant_id].set_start_node(initial_node_id, self.graph)
                     
@@ -147,7 +147,7 @@ class ACOProblem(object):
             assigned_ant_id = ants_id_list.pop()
             assigned_initial_state = choice(range(0,len(self.initial_states)))
             
-            self.colony.ants[assigned_ant_id].set_start_node(self.generateNodeHash(self.initial_states[assigned_initial_state]), self.graph)
+            self.colony.ants[assigned_ant_id].set_start_node(self.generate_node_hash(self.initial_states[assigned_initial_state]), self.graph)
 
 
     def generate_ant_solutions(self):
@@ -165,7 +165,7 @@ class ACOProblem(object):
         
         # Start consumers
         
-        num_consumers = multiprocessing.cpu_count() * 2
+        num_consumers = multiprocessing.cpu_count()
         consumers = [ Consumer(tasks, results) for _ in range(num_consumers) ]  
         
         for w in consumers:
@@ -210,14 +210,14 @@ class ACOProblem(object):
             for e in g.edges():
                 if e in self.graph.edges():
                     # if the edge is traversed then we give some positive feedback
-                    print(e)
-                    print(self.graph[e[0]][e[1]])
                     
                     if 'weight' in self.graph[e[0]][e[1]].keys():
                         self.graph[e[0]][e[1]]['weight'] += self.pheromone_update_criteria(g.nodes())
                     else:
                         self.graph[e[0]][e[1]]['weight'] = self.pheromone_update_criteria(g.nodes())
         # Evaporation
+        
+        print (self.graph.edges(data=True))
         for e in self.graph.edges(data=True):
             if 'weight' in e[2].keys():
                 e[2]['weight'] *= (1 - self.p)
@@ -266,7 +266,11 @@ class ACOProblem(object):
         while not(self.end_condition()):
         
             print("\t Generating ANT Solutions...")
-            solutions = self.generate_ant_solutions()
+            try:
+                solutions = self.generate_ant_solutions()
+            
+            except MemoryError:
+                print ("You are running low of memory. Try sudo pkill -f python :-D")
             print("\t Found "+ str(len(solutions)) + " solutions")
             
             print("Updating graph")

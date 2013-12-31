@@ -70,12 +70,12 @@ class Puzzle(ACOProblem):
 
         # Being a solution a list of nodes
         
-        return self.base_attractiveness / len(solution)
+        return (self.base_attractiveness * 1.0) / len(solution)
 
     
-    def generateNodeHash(self, state):
+    def generate_node_hash(self, state):
         
-        ''' generateNodeHash
+        ''' generate_node_hash
             Parameters:
             state
             
@@ -108,7 +108,7 @@ class Puzzle(ACOProblem):
 
     def calculate_cost(self, state):
         
-        state_hash = self.generateNodeHash(state)
+        state_hash = self.generate_node_hash(state)
         
         tile_positions = [-1, 0, 0, 1, 2, 1, 2, 0, 1, 3, 4, 2, 3, 5, 4, 5]
         tile_subsets = [-1, 1, 0, 0, 0, 1, 1, 2, 2, 1, 1, 2, 2, 1, 2, 2]

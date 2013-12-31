@@ -102,7 +102,7 @@ class Ant(object):
 #             print ("=========\nEstamos en "+ str(self.current_node_id))
 #             print ("Current: "+ str(self.aco_specific_problem.generateStateFromHash(self.current_node_id)))
 #             print ("Podemos ir a: \n\t"+ str(self.possible_new_edges))
-#             print("Tabla de costes: "+ str([(self.aco_specific_problem.generateNodeHash(s),self.aco_specific_problem.calculate_cost(s)) for s in self.aco_specific_problem.successors(self.graph.node[self.current_node_id]['node'].state) if self.last_node_id != self.aco_specific_problem.generateNodeHash(s)]))
+#             print("Tabla de costes: "+ str([(self.aco_specific_problem.generate_node_hash(s),self.aco_specific_problem.calculate_cost(s)) for s in self.aco_specific_problem.successors(self.graph.node[self.current_node_id]['node'].state) if self.last_node_id != self.aco_specific_problem.generate_node_hash(s)]))
 #             print ("La tabla de decision es: \n\t" + str(self.decision_table(self.current_node_id)))
 #             print ("La solucion: "+ str(self.aco_specific_problem.generateStateFromHash(self.solution_nodes_id[0])))
 #             print ("Sol id: "+ str(self.solution_nodes_id))
@@ -138,18 +138,21 @@ class Ant(object):
         successors = self.aco_specific_problem.successors(node_to_expand.state)
 
         for s in successors:
-            successor_index = self.aco_specific_problem.generateNodeHash(s)
+            successor_index = self.aco_specific_problem.generate_node_hash(s)
             
-            self.graph.add_node(successor_index)
-            self.graph.node[successor_index]['node'] = ACONode(s)
+            self.graph.add_node(successor_index) # we do this anyway to avoid a search
             
-            # TODO -------------> LO DE ABAJO (CUIDADO)
-            self.graph.add_edge(node_index_to_expand,successor_index, weight=self.aco_specific_problem.initial_tau)    
+            if 'node' not in self.graph.node[successor_index].keys():
+                self.graph.node[successor_index]['node'] = ACONode(s)
             
+            # If the edge doesnt exists yet
+            if successor_index not in self.graph.edge[node_index_to_expand].keys():
+                self.graph.add_edge(node_index_to_expand,successor_index, weight=self.aco_specific_problem.initial_tau)    
+                
             self.possible_new_edges = [(n1,n2,e) for (n1,n2,e) in self.graph.edges(self.current_node_id, data=True) if n2 != self.last_node_id]
     
-            if self.aco_specific_problem.generateNodeHash(s) in self.solution_nodes_id:                
-                self.solution_found = self.aco_specific_problem.generateNodeHash(s)
+            if self.aco_specific_problem.generate_node_hash(s) in self.solution_nodes_id:                
+                self.solution_found = self.aco_specific_problem.generate_node_hash(s)
 
     def move_ant(self, node_index):
         ''' move_ant

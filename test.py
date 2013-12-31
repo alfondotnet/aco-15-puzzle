@@ -14,7 +14,7 @@ i=0
 nants = 20
 base_attractiveness = 1
 
-ratio_de_evaporacion = 0.89
+ratio_de_evaporacion = 0.3
 cota = 0.8
 
 p1 = Puzzle(inicio, fin, 1, 1, nants, ratio_de_evaporacion, cota, base_attractiveness)
@@ -29,7 +29,7 @@ if sols != [False for _ in range(len(p1.colony.ants))]:
     
     for g in sols:
         if g != False:
-            print("\t de tamano: "+ str(len(nx.shortest_path(g,p1.generateNodeHash(inicio),p1.generateNodeHash(fin)))))
+            print("\t de tamano: "+ str(len(nx.shortest_path(g,p1.generate_node_hash(inicio),p1.generate_node_hash(fin)))))
     
     break
 '''
