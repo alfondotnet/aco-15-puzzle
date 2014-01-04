@@ -1,3 +1,4 @@
+# coding=utf-8
 import networkx as nx
 import matplotlib.pyplot as plt
 import multiprocessing
@@ -5,6 +6,7 @@ from aconode import ACONode
 from colony import Colony
 from random import choice
 from consumer import Consumer
+import math
 
 '''
 acoproblem.py
@@ -17,7 +19,7 @@ class ACOProblem(object):
       
     '''Generic class for a generic ACOProblem'''
     
-    def __init__(self, initial_states, solution_states, alpha, beta, number_of_ants, p, q0, base_attractiveness) :      
+    def __init__(self, initial_states, solution_states, alpha, beta, number_of_ants, p, q0, base_attractiveness, initial_tau, initial_estimate) :      
         '''
         Receives a list of initial_states and solution_states
         To implement:
@@ -34,7 +36,9 @@ class ACOProblem(object):
         self.number_of_ants = number_of_ants
         self.colony = Colony(self.number_of_ants)  # We create a Colony with n Ants
         
-        self.initial_tau = 0.1
+        self.initial_tau = initial_tau
+        
+        self.estimate = initial_estimate
         
         self.global_best_solution = None
 
@@ -97,7 +101,7 @@ class ACOProblem(object):
         '''
         
         self.graph = nx.Graph()
-        # Now we place final and initial nodes
+        # Now we place final node
             
         for s in self.initial_states:
             
@@ -197,6 +201,25 @@ class ACOProblem(object):
     
         return [r for (r,b) in results_list if b != False] 
         
+    def generate_ant_solutions_mono(self):
+        
+        while True:
+            
+            self.ant_placement()
+            
+            list_results_ants = list()
+            
+            for ant in self.colony.ants:
+                sol = ant.__call__()
+                list_results_ants.append(sol)
+              
+            
+            if [r[1] for r in list_results_ants] != [False for _ in range(len(self.colony.ants))]:
+                #print (list_results_ants)
+                return [r for (r,b) in list_results_ants if b != False]
+                
+    
+    
     def pheromone_update(self, list_graph):
         ''' pheromone_update
             Parameters: 
@@ -205,20 +228,30 @@ class ACOProblem(object):
             Performs both pheromone evaporation equally in the global graph and
             positive feedback on the paths of the solutions (Path on graphs) passed by argument
         '''
-        # Positive feedback   
+        # Positive feedback 
+        acc = 0 #debug
+        acc2 = 0
         for g in list_graph:
             for e in g.edges():
-                if e in self.graph.edges():
+                acc += 1
+                # Mirar la comprobacion de abajo en ANT a ver si esta bien!
+                if (e[0],e[1]) in self.graph.edges() or (e[1],e[0]) in self.graph.edges():
                     # if the edge is traversed then we give some positive feedback
-                    
+                    acc2 += 1
                     if 'weight' in self.graph[e[0]][e[1]].keys():
                         self.graph[e[0]][e[1]]['weight'] += self.pheromone_update_criteria(g.nodes())
+                        self.graph[e[1]][e[0]]['weight'] += self.pheromone_update_criteria(g.nodes())
                     else:
                         self.graph[e[0]][e[1]]['weight'] = self.pheromone_update_criteria(g.nodes())
+                        self.graph[e[1]][e[0]]['weight'] = self.pheromone_update_criteria(g.nodes())
+        #print ("acc1" + str(acc))
+        #print ("acc2" + str(acc2))
         # Evaporation
         
-        print (self.graph.edges(data=True))
+        #print (self.graph.edges(data=True))
+        
         for e in self.graph.edges(data=True):
+            # This has not to be checked so something must be wrong...
             if 'weight' in e[2].keys():
                 e[2]['weight'] *= (1 - self.p)
             else:
@@ -239,16 +272,65 @@ class ACOProblem(object):
         
         for solution in list_solutions:
             # [[(1080243414620259090, {'node': <aconode.ACONode instance at 0x2c713b0>, 'initial': True, 'solution': False}), (16212338162585125650L, {'node': <aconode.ACONode instance at 0x2c71368>}), (17225648078743487250L, {'node': <aconode.ACONode instance at 0x2c71878>}), (17270683387822424850L, {'node': <aconode.ACONode instance at 0x2c718c0>}), (17270672049108763410L, {'node': <aconode.ACONode instance at 0x2c71908>}), (16189824631214261010L, {'node': <aconode.ACONode instance at 0x2c71950>}), (1057729883249394450, {'node': <aconode.ACONode instance at 0x2c71998>}), (14892576832299025170L, {'node': <aconode.ACONode instance at 0x2c719e0>}), (14892717567639896850L, {'node': <aconode.ACONode instance at 0x2c71a28>}), (14892717569401504530L, {'node': <aconode.ACONode instance at 0x2c71a70>}), (14892717569451835410L, {'node': <aconode.ACONode instance at 0x2c71ab8>}), (14892717569451820050L, {'node': <aconode.ACONode instance at 0x2c71b00>}), (14892717567572800530L, {'node': <aconode.ACONode instance at 0x2c71b48>}), (14892717568327775250L, {'node': <aconode.ACONode instance at 0x2c71b90>}), (14892717568422147090L, {'node': <aconode.ACONode instance at 0x2c71bd8>}), (14892716812519437330L, {'node': <aconode.ACONode instance at 0x2c71c20>}), (14847681503440499730L, {'node': <aconode.ACONode instance at 0x2c71c68>}), (13901925581692695570L, {'node': <aconode.ACONode instance at 0x2c71cb0>}), (14982772999587197970L, {'node': <aconode.ACONode instance at 0x2c71cf8>}), (14982779596556301330L, {'node': <aconode.ACONode instance at 0x2c71d40>}), (14982779595801326610L, {'node': <aconode.ACONode instance at 0x2c71d88>}), (14982779597680346130L, {'node': <aconode.ACONode instance at 0x2c71dd0>}), (14982779597680361490L, {'node': <aconode.ACONode instance at 0x2c71e18>}), (14982779597630030610L, {'node': <aconode.ACONode instance at 0x2c71e60>}), (14982779597803045650L, {'node': <aconode.ACONode instance at 0x2c71ea8>}), (14982779597804094210L, {'node': <aconode.ACONode instance at 0x2c71ef0>}), (14982779597804094240L, {'node': <aconode.ACONode instance at 0x2c71f38>}), (14982779597803766565L, {'node': <aconode.ACONode instance at 0x2c71f80>}), (14982779559149650725L, {'node': <aconode.ACONode instance at 0x2c71fc8>}), (14982778914904556325L, {'node': <aconode.ACONode instance at 0x2c72050>}), (14982772730151650085L, {'node': <aconode.ACONode instance at 0x2c72098>}), (14982784824595006245L, {'node': <aconode.ACONode instance at 0x2c720e0>}), (14982784824645337125L, {'node': <aconode.ACONode instance at 0x2c72128>}), (14982784824645321765L, {'node': <aconode.ACONode instance at 0x2c72170>}), (14982784822766302245L, {'node': <aconode.ACONode instance at 0x2c721b8>}), (14982784823521276965L, {'node': <aconode.ACONode instance at 0x2c72200>}), (14982784823588384805L, {'node': <aconode.ACONode instance at 0x2c72248>}), (14982784823588357925L, {'node': <aconode.ACONode instance at 0x2c72290>}), (14982784822783063845L, {'node': <aconode.ACONode instance at 0x2c722d8>}), (14982784823789696805L, {'node': <aconode.ACONode instance at 0x2c72320>}), (14982784823907135525L, {'node': <aconode.ACONode instance at 0x2c72368>}), (14982784823907136005L, {'node': <aconode.ACONode instance at 0x2c723b0>}), (14982784823906087445L, {'node': <aconode.ACONode instance at 0x2c723f8>}), (14982784411595518485L, {'node': <aconode.ACONode instance at 0x2c72440>}), (14982785055840612885L, {'node': <aconode.ACONode instance at 0x2c72488>}), (14982785094494728725L, {'node': <aconode.ACONode instance at 0x2c724d0>}), (14982785094488830485L, {'node': <aconode.ACONode instance at 0x2c72518>}), (14982784407304548885L, {'node': <aconode.ACONode instance at 0x2c72560>}), (14919734974594036245L, {'node': <aconode.ACONode instance at 0x2c725a8>}), (14974622595052614165L, {'node': <aconode.ACONode instance at 0x2c725f0>}), (14977155831188304405L, {'node': <aconode.ACONode instance at 0x2c72638>}), (14977154929245172245L, {'node': <aconode.ACONode instance at 0x2c72680>}), (14977155616429453845L, {'node': <aconode.ACONode instance at 0x2c726c8>}), (14977155616435352085L, {'node': <aconode.ACONode instance at 0x2c72710>}), (14977155616435679760L, {'node': <aconode.ACONode instance at 0x2c72758>}), (14977155616435679745L, {'node': <aconode.ACONode instance at 0x2c727a0>}), (14977155616435679265L, {'node': <aconode.ACONode instance at 0x2c727e8>}), (14977155616435667745L, {'node': <aconode.ACONode instance at 0x2c72830>}), (14977155615361942305L, {'node': <aconode.ACONode instance at 0x2c72878>}), (14977155617123549985L, {'node': <aconode.ACONode instance at 0x2c728c0>}), (14977155617173880865L, {'node': <aconode.ACONode instance at 0x2c72908>}), (14977155617173865505L, {'node': <aconode.ACONode instance at 0x2c72950>}), (14977155615294845985L, {'node': <aconode.ACONode instance at 0x2c72998>}), (14977155616049820705L, {'node': <aconode.ACONode instance at 0x2c729e0>}), (14977155616144192545L, {'node': <aconode.ACONode instance at 0x2c72a28>}), (14977155616146289665L, {'node': <aconode.ACONode instance at 0x2c72a70>}), (14977155616146288705L, {'node': <aconode.ACONode instance at 0x2c72ab8>}), (14977155616146261825L, {'node': <aconode.ACONode instance at 0x2c72b00>}), (14977155615340967745L, {'node': <aconode.ACONode instance at 0x2c72b48>}), (14977155616850917185L, {'node': <aconode.ACONode instance at 0x2c72b90>}), (14977155616968355905L, {'node': <aconode.ACONode instance at 0x2c72bd8>}), (14977155616968344385L, {'node': <aconode.ACONode instance at 0x2c72c20>}), (14977155615357756225L, {'node': <aconode.ACONode instance at 0x2c72c68>}), (14977155617119363905L, {'node': <aconode.ACONode instance at 0x2c72cb0>}), (14977155617169694785L, {'node': <aconode.ACONode instance at 0x2c72cf8>}), (14977155617169671745L, {'node': <aconode.ACONode instance at 0x2c72d40>}), (14977155615290652225L, {'node': <aconode.ACONode instance at 0x2c72dd0>}), (14977155616045626945L, {'node': <aconode.ACONode instance at 0x2c72ea8>}), (14977155616146288705L, {'node': <aconode.ACONode instance at 0x2c72ab8>}), (14977155616146289665L, {'node': <aconode.ACONode instance at 0x2c72a70>}), (14977155616144192545L, {'node': <aconode.ACONode instance at 0x2c72a28>}), (14977155616049820705L, {'node': <aconode.ACONode instance at 0x2c729e0>}), (14977155615294845985L, {'node': <aconode.ACONode instance at 0x2c72998>}), (14977155617173865505L, {'node': <aconode.ACONode instance at 0x2c72950>}), (14977155617173880865L, {'node': <aconode.ACONode instance at 0x2c72908>}), (14977155617123549985L, {'node': <aconode.ACONode instance at 0x2c728c0>}), (14977155615361942305L, {'node': <aconode.ACONode instance at 0x2c72878>}), (14977155616435667745L, {'node': <aconode.ACONode instance at 0x2c72830>}), (14977155616435679265L, {'node': <aconode.ACONode instance at 0x2c727e8>}), (14977155616435679745L, {'node': <aconode.ACONode instance at 0x2c727a0>}), (14977155616429388385L, {'node': <aconode.ACONode instance at 0x2c74368>}), (14977154929245106785L, {'node': <aconode.ACONode instance at 0x2c74488>}), (14977155831188238945L, {'node': <aconode.ACONode instance at 0x2c745a8>}), (14974622595052548705L, {'node': <aconode.ACONode instance at 0x2c746c8>}), (14919734974593970785L, {'node': <aconode.ACONode instance at 0x2c747e8>}), (14982784407304483425L, {'node': <aconode.ACONode instance at 0x2c74908>}), (14982785094488765025L, {'node': <aconode.ACONode instance at 0x2c74a28>}), (14982785094495056385L, {'node': <aconode.ACONode instance at 0x2c74b48>}), (14982785094495055905L, {'node': <aconode.ACONode instance at 0x2c74c68>}), (14982785094495044385L, {'node': <aconode.ACONode instance at 0x2c74d88>}), (14982785093421318945L, {'node': <aconode.ACONode instance at 0x2c74ea8>}), (14982644358080447265L, {'node': <aconode.ACONode instance at 0x2c74fc8>}), (1147797409030816545, {'node': <aconode.ACONode instance at 0x2c77128>}), (1147797409030816545, {'node': <aconode.ACONode instance at 0x2c77128>})]]
-
+            #print ("Solution "+ str(solution))
             g = nx.Graph()
             g.add_nodes_from(solution)
+            #print("graph generated: "+ str(g.node))
             g.add_path([s[0] for s in solution])
-
+            
             self.graph = nx.compose(self.graph, g) # self.graph edges have preference over g
             list_graphs_return.append(g)
         
+            #print ("Update graph len nodes(self.graph): " + str(len(self.graph.nodes())))
+            #print ("Update graph len edges(self.graph): " + str(len(self.graph.edges())))
+            
+            i = 0
+            for l in list_graphs_return:
+                #print ("Update graph len nodes ("+str(i) + "): " + str(len(l.nodes())))
+                #print ("Update graph len edges ("+str(i) + "): " + str(len(l.edges())))
+                i += 1
+
         return list_graphs_return
         
+    def update_graph_mono(self, list_solutions):
+        
+        ''' update__graph_mono
+            Parameters:
+            list_solutions: A list of paths returned by different ants
+            A path is a list of NODES (not node indexes)
+            Given a list of solutions (list of paths), updates the global graph.
+            
+            Return:
+            Returns a list of graphs of the solutions
+            
+            I am going to try to do all in here
+        '''
+        
+        for sol in list_solutions:
+            positive_feedback = self.pheromone_update_criteria(sol)
+            
+            for node_index in range(len(sol)):
+                
+                if node_index == len(sol)-1:
+                    break
+                
+                this_node = sol[node_index]
+                next_node = sol[node_index+1]
+                
+                self.graph.add_edge(this_node[0],next_node[0]) # if exists doesnt override the data
+                
+                if 'weight' in self.graph.edge[this_node[0]][next_node[0]] or \
+                    'weight' in self.graph.edge[next_node[0]][this_node[0]]:
+                    
+                    self.graph.edge[this_node[0]][next_node[0]]['weight'] += positive_feedback
+                else:
+                    self.graph.edge[this_node[0]][next_node[0]]['weight'] = positive_feedback
+                
+                self.graph.edge[this_node[0]][next_node[0]]['weight'] *= (1 - self.p)
+                                
+        return True
+    
+    
     def run(self):
         
         '''
@@ -266,17 +348,16 @@ class ACOProblem(object):
         while not(self.end_condition()):
         
             print("\t Generating ANT Solutions...")
-            try:
-                solutions = self.generate_ant_solutions()
+            solutions = self.generate_ant_solutions_mono()
             
-            except MemoryError:
-                print ("You are running low of memory. Try sudo pkill -f python :-D")
             print("\t Found "+ str(len(solutions)) + " solutions")
-            
             print("Updating graph")
-            sub_graphs = self.update_graph(solutions)
+            
+            self.update_graph_mono(solutions)
+            
             print("Updating pheromone...")  
-            self.pheromone_update(sub_graphs)
+            #self.pheromone_update(sub_graphs)
+            
             for sol in solutions:    
                 
                 print("\t Solution of value: "+ str(self.objective_function(sol)))
@@ -284,6 +365,7 @@ class ACOProblem(object):
                 # We see if any of our solutions is better than the best so far
                 if self.objective_function(sol) < self.objective_function(self.global_best_solution):
                     self.global_best_solution = sol
+                    self.estimate = self.objective_function(sol) + math.ceil(self.objective_function(sol) / 2)
                     print("\t Global solution improved!")
                     
               

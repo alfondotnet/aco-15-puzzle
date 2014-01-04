@@ -1,3 +1,4 @@
+# coding=utf-8
 from acoproblem import ACOProblem
 import random
 import sys
@@ -18,9 +19,9 @@ class Puzzle(ACOProblem):
     So, our state is a pair ([state],hole)
     '''
     
-    def __init__(self, initialPieces, solution, alpha, beta, number_of_ants, p, q0, base_attractiveness):
+    def __init__(self, initialPieces, solution, alpha, beta, number_of_ants, p, q0, base_attractiveness, initial_tau, initial_estimate):
         
-        super(Puzzle, self).__init__([initialPieces], [solution], alpha, beta, number_of_ants, p, q0, base_attractiveness)
+        super(Puzzle, self).__init__([initialPieces], [solution], alpha, beta, number_of_ants, p, q0, base_attractiveness, initial_tau, initial_estimate)
         
         # Now we pass the self to every ant so they know how to expand the graph.
         
@@ -55,8 +56,7 @@ class Puzzle(ACOProblem):
         '''
         Here we have to determine when we have to end.
         '''
-        # TODO
-        return self.global_best_solution != None and len(self.global_best_solution) < 40 
+        return self.global_best_solution != None and len(self.global_best_solution) <= 29 
 
             
     def pheromone_update_criteria(self, solution):

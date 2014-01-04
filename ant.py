@@ -1,3 +1,4 @@
+# coding=utf-8
 from __future__ import division
 import networkx as nx
 from aconode import ACONode
@@ -86,7 +87,7 @@ class Ant(object):
         '''
 
         i = 0
-        cota_de_salida = 110
+        cota_de_salida = self.aco_specific_problem.estimate
         #print(self)
         while self.current_node_id not in self.solution_nodes_id:     
             
