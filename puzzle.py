@@ -1,5 +1,5 @@
 # coding=utf-8
-from acoproblem import ACOProblem
+from acoproblem_mono import ACOProblem
 import random
 import sys
 

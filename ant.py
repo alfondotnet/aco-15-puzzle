@@ -53,7 +53,7 @@ class Ant(object):
         self.start_node_id = start_node_id
         self.current_node_id = start_node_id
         self.last_node_id = None
-        self.graph = graph
+        self.graph = graph.copy() # so it doesn't update the global graph :P
         self.decision_tables = dict()
         self.list_nodes_visited = list()
         self.list_nodes_visited.append(self.current_node_id)

@@ -305,10 +305,12 @@ class ACOProblem(object):
             
             I am going to try to do all in here
         '''
-        
+        print(self.graph.edge)
         for sol in list_solutions:
-            positive_feedback = self.pheromone_update_criteria(sol)
             
+            positive_feedback = self.pheromone_update_criteria(sol)
+            print(positive_feedback)
+            raw_input()
             for node_index in range(len(sol)):
                 
                 if node_index == len(sol)-1:
@@ -317,17 +319,22 @@ class ACOProblem(object):
                 this_node = sol[node_index]
                 next_node = sol[node_index+1]
                 
+                print(this_node)
+                print(next_node)
+                raw_input()
                 self.graph.add_edge(this_node[0],next_node[0]) # if exists doesnt override the data
                 
-                if 'weight' in self.graph.edge[this_node[0]][next_node[0]] or \
-                    'weight' in self.graph.edge[next_node[0]][this_node[0]]:
-                    
+                try:             
                     self.graph.edge[this_node[0]][next_node[0]]['weight'] += positive_feedback
-                else:
+                except KeyError:
                     self.graph.edge[this_node[0]][next_node[0]]['weight'] = positive_feedback
                 
+                print(self.graph.edge)
+                raw_input()
                 self.graph.edge[this_node[0]][next_node[0]]['weight'] *= (1 - self.p)
-                                
+        
+                
+        
         return True
     
     
@@ -346,17 +353,16 @@ class ACOProblem(object):
         self.initial_graph_creation()
         
         while not(self.end_condition()):
-        
+            
             print("\t Generating ANT Solutions...")
             solutions = self.generate_ant_solutions_mono()
-            
+
             print("\t Found "+ str(len(solutions)) + " solutions")
-            print("Updating graph")
+            print("Updating graphssssssss")
             
+            solutions = [[(1,{'a':1}),(2,{'a':2}),(3,{'a':3})]]
             self.update_graph_mono(solutions)
-            
-            print("Updating pheromone...")  
-            #self.pheromone_update(sub_graphs)
+
             
             for sol in solutions:    
                 
