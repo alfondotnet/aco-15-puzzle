@@ -19,9 +19,9 @@ class Puzzle(ACOProblem):
     So, our state is a pair ([state],hole)
     '''
     
-    def __init__(self, initialPieces, solution, alpha, beta, number_of_ants, p, q0, base_attractiveness, initial_tau, initial_estimate):
+    def __init__(self, initialPieces, solution, alpha, beta, number_of_ants, p, q0, base_attractiveness, initial_tau):
         
-        super(Puzzle, self).__init__([initialPieces], [solution], alpha, beta, number_of_ants, p, q0, base_attractiveness, initial_tau, initial_estimate)
+        super(Puzzle, self).__init__([initialPieces], [solution], alpha, beta, number_of_ants, p, q0, base_attractiveness, initial_tau)
         
         # Now we pass the self to every ant so they know how to expand the graph.
         
@@ -56,8 +56,9 @@ class Puzzle(ACOProblem):
         '''
         Here we have to determine when we have to end.
         '''
-        return self.global_best_solution != None and len(self.global_best_solution) <= 29 
-
+        #return self.global_best_solution != None and len(self.global_best_solution) <= 33 
+        # Para ver la convergencia mejor en el test
+        return False
             
     def pheromone_update_criteria(self, solution):
         ''' 
@@ -65,7 +66,9 @@ class Puzzle(ACOProblem):
             Parameters:
             none
             Given a solution
-            Returns the new pheromone associated for that solution
+            Returns the new pheromone associated for that solution.
+            Performes positive feedback on a path.
+            This is done by the best ant in each iteration (global update)
         '''
 
         # Being a solution a list of nodes
@@ -107,81 +110,81 @@ class Puzzle(ACOProblem):
         return (list,list.index(0))
 
     def calculate_cost(self, state):
-        
+         
         state_hash = self.generate_node_hash(state)
-        
+         
         tile_positions = [-1, 0, 0, 1, 2, 1, 2, 0, 1, 3, 4, 2, 3, 5, 4, 5]
         tile_subsets = [-1, 1, 0, 0, 0, 1, 1, 2, 2, 1, 1, 2, 2, 1, 2, 2]
-            
+             
         index0 = 0
         index1 = 0
         index2 = 0
-    
+     
         for pos in range(15,-1,-1):
-    
+     
             tile = ((state_hash >> (pos << 2)) & 0xF)
-            
+             
             if tile != 0:  
                 subset_number = tile_subsets[tile]
-                
+                 
                 if subset_number == 2:
                     index2 |= pos << (tile_positions[tile] << 2)
-                    
+                     
                 elif subset_number == 1:
                     index1 |= pos << (tile_positions[tile] << 2)
-                    
+                     
                 else:
                     index0 |= pos << (tile_positions[tile] << 2)
-                        
+                         
         return self.ba0[index0] + self.ba1[index1] + self.ba2[index2]
 
 #     def calculate_cost(self, state):
-#         
+#          
 #         ''' calculate_cost:
 #             Parameters: 
 #             state = Current state to calculate cost (Remember is a pair State and hole index!)
-# 
+#  
 #             Calculate the cost of 'state', by applying the heuristic function from it to the
 #             solution state
 #         '''
-#         
-#         solution = self.solutionStates[0]
+#          
+#         solution = self.solution_states[0]
 #         cost = 0
-#         
+#          
 #         def distance_between_array_indexes(index_from,index_to):
-#             
+#              
 #             ''' given two indexes of the 15-puzzle array, return 
 #                 their manhattan distance
-#                 
+#                  
 #                 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 0
-#                 
+#                  
 #                 1  2  3  4
 #                 5  6  7  8
 #                 9 10 11 12
 #                 1314 15 0
-#                 
+#                  
 #             '''
-#             
+#              
 #             def index_to_ij(index):     
 #                 return (index%4,index/4)
-#                 
+#                  
 #             ij1 = index_to_ij(index_from)
 #             ij2 = index_to_ij(index_to)
-#             
+#              
 #             return abs(ij2[0] - ij1[0]) + abs(ij2[1] - ij1[1])
-#     
+#      
 #         for i in range(16):
 #             cost += distance_between_array_indexes(solution[0].index(state[0][i]), i)
-#         
+#          
 #         return cost + self.number_of_linear_conflicts(state)*2
-#         
-#         
+#          
+#          
 #     def number_of_linear_conflicts(self, state):
 #         '''
 #         Calculates the number of linear conflicts of a state
 #         '''
 #         state_tiles = state[0]
-#         
+#          
 #         def number_lc(state,line,row):
 #             ''' given a line (0-3) return the number of linear conflicts in it
 #                 row = True means a row otherwise a column
@@ -189,32 +192,32 @@ class Puzzle(ACOProblem):
 #             index_from = line * 4 if row else line%4
 #             index_to = index_from + 4 if row else index_from+13
 #             pass_range = 1 if row else 4
-#             
+#              
 #             linear_conflicts = 0
-#             
+#              
 #             for tile in range(index_from,index_to,pass_range):
 #                 for other_tile in range(index_from,index_to,pass_range):
 #                     if tile != other_tile:
-#                         goal_tile = self.solutionStates[0][0].index(state[tile])
-#                         goal_other_tile = self.solutionStates[0][0].index(state[other_tile])
+#                         goal_tile = self.solution_states[0][0].index(state[tile])
+#                         goal_other_tile = self.solution_states[0][0].index(state[other_tile])
 #                         if index_from <= goal_tile <= index_to and \
 #                         index_from <= goal_other_tile <= index_to:
 #                             # now check if tile is to the left of other_tile and its goal is to the right of
 #                             # other_tile     
 #                             if tile < other_tile and goal_tile > goal_other_tile:
 #                                 linear_conflicts += 1
-#                                 
+#                                  
 #             return linear_conflicts
-#                 
+#                  
 #         linear_conflicts = 0
-#         
+#          
 #         for line in range(0,4):
 #             linear_conflicts += number_lc(state_tiles, line, True)
 #             linear_conflicts += number_lc(state_tiles, line, False)
-#         
+#          
 #         return linear_conflicts         
-
-    
+# 
+#     
     def successors(self, state):
       
         ''' 

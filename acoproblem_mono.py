@@ -1,7 +1,7 @@
 # coding=utf-8
 import networkx as nx
-import matplotlib.pyplot as plt
-
+#import matplotlib.pyplot as plt
+import sys
 from aconode import ACONode
 from colony import Colony
 from random import choice
@@ -18,7 +18,7 @@ class ACOProblem(object):
       
     '''Generic class for a generic ACOProblem'''
     
-    def __init__(self, initial_states, solution_states, alpha, beta, number_of_ants, p, q0, base_attractiveness, initial_tau, initial_estimate) :      
+    def __init__(self, initial_states, solution_states, alpha, beta, number_of_ants, p, q0, base_attractiveness, initial_tau) :      
         '''
         Receives a list of initial_states and solution_states
         To implement:
@@ -36,8 +36,6 @@ class ACOProblem(object):
         self.colony = Colony(self.number_of_ants)  # We create a Colony with n Ants
         
         self.initial_tau = initial_tau
-        
-        self.estimate = initial_estimate
         
         self.global_best_solution = None
 
@@ -84,11 +82,11 @@ class ACOProblem(object):
         '''
 
     
-    def draw_graph(self):
-        
-        pos=nx.spring_layout(self.global_graph)
-        nx.draw(self.global_graph,pos,node_color='#A0CBE2',edge_color='#BB0000',width=2,with_labels=True)
-        plt.show()
+#     def draw_graph(self):
+#         
+#         pos=nx.spring_layout(self.global_graph)
+#         nx.draw(self.global_graph,pos,node_color='#A0CBE2',edge_color='#BB0000',width=2,with_labels=True)
+#         plt.show()
         
 
     def initial_graph_creation(self):
@@ -154,71 +152,60 @@ class ACOProblem(object):
 
 
     def generate_ant_solutions_mono(self):
-        
-        while True:
-
-            self.ant_placement()
-
-            list_results_ants = list()
-            
-            for ant in self.colony.ants:
-                sol = ant.__call__()
-                list_results_ants.append(sol)
-
-                      
-            if [r[1] for r in list_results_ants] != [False for _ in range(len(self.colony.ants))]:
-                #print (list_results_ants)
-                return [r for (r,b) in list_results_ants if b != False]
-                
-    
-    
-
-    def update_graph_mono(self, list_solutions):
-        
-        ''' update__graph_mono
-            Parameters:
-            list_solutions: A list of paths returned by different ants
-            A path is a list of NODES (not node indexes)
-            Given a list of solutions (list of paths), updates the global graph.
-            
-            Return:
-            Returns a list of graphs of the solutions
-            
-            I am going to try to do all in here
-        '''
-
-        for sol in list_solutions:
-            
-            positive_feedback = self.pheromone_update_criteria(sol)
-
-            for node_index in range(len(sol)):
-                
-                if node_index == len(sol)-1:
-                    break
-                
-                this_node = sol[node_index]
-                next_node = sol[node_index+1]
-                
-                self.global_graph.add_edge(this_node[0],next_node[0]) # if exists doesnt override the data
-                
-                try:             
-                    self.global_graph.edge[this_node[0]][next_node[0]]['weight'] += positive_feedback
-                except KeyError:
-                    self.global_graph.edge[this_node[0]][next_node[0]]['weight'] = positive_feedback
-                
-
-                self.global_graph.edge[this_node[0]][next_node[0]]['weight'] *= (1 - self.p)
-        
-                
-        
-        return True
-    
-    
-    def run(self):
-        
-        '''
+        ''' generate_ant_solutions_mono
             Parameters:
             none
+            
+            Return:
+            A list of solutions
+            
+            An ant MUST know the iteration she is in so it can compute the pheromone on the fly, based on all the
+        '''      
+        while True:
+            
+            self.ant_placement()
+            # When at least someone has found something, we kill the rest
+            while True:
+                
+                # STATS if exists run exists aswell
+
+                if (len(self.global_graph)) > 2000000:
+                    return False
+
+                
+                list_results_ants = list()
+                # Performs one iteration in each ant
+                for ant in self.colony.ants:
+                    sol = ant.__iteration__()
+                    list_results_ants.append(sol)
+                
+                if [r[1] for r in list_results_ants] != [False for _ in range(len(self.colony.ants))]:
+                    break
+
+            # We see which one is the best to give some positive feedback                 
+            best_sol = sys.maxint
+            best_ant = None
+        
+            for sol in list_results_ants:
+                if sol[1] == False:
+                    continue
+                if len(sol[0]) < best_sol:
+                    best_sol,best_ant = sol
+                    
+            # Global update
+            
+            self.colony.ants[best_ant].positive_feedback() 
+
+            return [r for (r,b) in list_results_ants if b != False]
+
+
+    
+    def run(self, same_results_condition):
+        
+        '''
+            Parameters:
+            same_results_condition: Times we need to have the same result to exist.
+            Means that it has considerably converged.
             
             This is the ACO Algorithm itself
             
@@ -228,26 +215,43 @@ class ACOProblem(object):
         
         self.initial_graph_creation()
         
+        last_value = sys.maxint
+        same_value_times = 0
+        first_iteration = True
+        
         while not(self.end_condition()):
             
-            print("\t Generating ANT Solutions...")
+            #print("\t Generating ANT Solutions...")
             solutions = self.generate_ant_solutions_mono()
 
-            print("\t Found "+ str(len(solutions)) + " solutions")
-            print("Updating graphssssssss")
+            #print("\t Found "+ str(len(solutions)) + " solutions")
             
-            self.update_graph_mono(solutions)
-
+            if solutions == False:
+                return False
             
-            for sol in solutions:    
+            
+            for sol in solutions:
                 
-                print("\t Solution of value: "+ str(self.objective_function(sol)))
+                if first_iteration:
+                    last_value = sol
+                    first_iteration = False
                 
-                # We see if any of our solutions is better than the best so far
+                if last_value == sol:
+                    same_value_times += 1    
+                else:
+                    same_value_times = 0
+                
+                if same_value_times > same_results_condition:
+                    return sol
+                    
+                last_value = sol
+                
+                print ("Solucion de "+ str(len(sol)))
+                
                 if self.objective_function(sol) < self.objective_function(self.global_best_solution):
                     self.global_best_solution = sol
-                    self.estimate = self.objective_function(sol) + math.ceil(self.objective_function(sol) / 2)
-                    print("\t Global solution improved!")
-                    
-              
+                    #self.estimate = self.objective_function(sol)
+                    print("\t Global solution improved! ", len(sol))
+        return sol
+
             

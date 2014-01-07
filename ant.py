@@ -47,17 +47,18 @@ class Ant(object):
         self.solution_found = None # This is set in expand_node so move_to_another_ant goes there.
         
         self.list_nodes_visited = None # List of node indexes visited
-    
+        self.iteration_number = None # To compute pheromone
+        
     def set_start_node(self, start_node_id, graph):
 
         self.start_node_id = start_node_id
         self.current_node_id = start_node_id
         self.last_node_id = None
-        self.graph = graph.copy() # so it doesn't update the global graph :P
+        self.graph = graph # So it directly updates the global graph
         self.decision_tables = dict()
         self.list_nodes_visited = list()
         self.list_nodes_visited.append(self.current_node_id)
-
+        self.solution_found = None
         
     def __str__(self):
         
@@ -70,7 +71,7 @@ class Ant(object):
 
     def __call__(self):
         
-        
+
         if self.aco_specific_problem == None:
             raise Exception ("You have to pass an instance of your specific ACO problem to every ant of the colony first!")
     
@@ -108,7 +109,7 @@ class Ant(object):
 #             print ("La solucion: "+ str(self.aco_specific_problem.generateStateFromHash(self.solution_nodes_id[0])))
 #             print ("Sol id: "+ str(self.solution_nodes_id))
 #             print ("=======")
-#                     
+#                      
 #             raw_input()
 
 
@@ -118,12 +119,24 @@ class Ant(object):
                 #print("\t Cota de salida: "+ str(cota_de_salida))
                 #print("\t Saliendo con "+ str(len(self.graph.node)) + " nodos")
                 #print (str(self.id)+" Saliendo en "+ str(self.current_node_id))
+
                 return (None,False)
             i += 1
         
         # Returns a path of nodes in order
-        return ([(node_index,self.graph.node[node_index]) for node_index in self.list_nodes_visited],True)
+        return ([(node_index,self.graph.node[node_index]) for node_index in self.list_nodes_visited],self.id)
     
+
+    def __iteration__(self):
+        ''' Perfoms just one single iteration., This is to simulate concurrency
+        '''
+        if self.current_node_id in self.solution_nodes_id:
+            return ([(node_index,self.graph.node[node_index]) for node_index in self.list_nodes_visited],self.id)
+        self.expand_node(self.current_node_id) 
+        self.move_to_another_node()
+        
+        return (None,False)
+        
     
     def expand_node(self, node_index_to_expand):
         
@@ -164,13 +177,23 @@ class Ant(object):
             Moves the ant.
             This is called only by move_to_another_node, because that method has to check
             first for efficiency that the node where the ant is going has not been visited already
+        
+            Performs a local update of the pheromone
         '''
-        
-        self.last_node_id = self.current_node_id
-        self.current_node_id = node_index
-        
-        self.list_nodes_visited.append(node_index)
-        
+        # We obviate the last case
+        if self.current_node_id not in self.solution_nodes_id:
+            
+            self.last_node_id = self.current_node_id
+            self.current_node_id = node_index
+                
+            self.list_nodes_visited.append(node_index)
+            
+            # local update
+            
+            self.graph.edge[self.last_node_id][self.current_node_id]['weight'] *= (1-self.aco_specific_problem.p) 
+            self.graph.edge[self.last_node_id][self.current_node_id]['weight'] += self.aco_specific_problem.p * self.aco_specific_problem.initial_tau
+            
+    
     def decision_table(self, node_index):
         
         ''' decision table
@@ -192,7 +215,8 @@ class Ant(object):
         for edge in self.possible_new_edges:
          
             next_state = self.graph.node[edge[1]]['node'].state
-            pheromone = edge[-1]['weight'] # tau i,j
+            pheromone = edge[-1]['weight'] # tau i,j pheromone (evaporated)
+
             next_state_cost = self.aco_specific_problem.calculate_cost(next_state)
 
             # inverse of the cost of this potential new state
@@ -213,6 +237,26 @@ class Ant(object):
         self.decision_tables[node_index] = decision_table
         return decision_table
         
+    def positive_feedback(self):
+        ''' performs a positive feedback on the path
+            once it has finished (found a solution)
+        '''
+        
+        sol = self.list_nodes_visited
+        positive_feedback = self.aco_specific_problem.pheromone_update_criteria(sol)
+        
+        #print ("hola soy "+ str(self.id) + " y voy a dar " + str(positive_feedback) + " de feedback a mi sol de "+ str(len(sol)))
+        
+        for node_index in range(len(sol)):
+            
+            if node_index == len(sol)-1:
+                break
+            
+            this_node = sol[node_index]
+            next_node = sol[node_index+1]
+       
+            self.graph.edge[this_node][next_node]['weight'] += positive_feedback
+
         
     def move_to_another_node(self):
         
@@ -232,7 +276,8 @@ class Ant(object):
         
         '''
         # If the solution is next, just go to it.
-        if self.solution_found != None:
+        
+        if self.solution_found != None and self.current_node_id not in self.solution_nodes_id:
             self.move_ant(self.solution_found)
            
         q = random.random()
@@ -244,6 +289,7 @@ class Ant(object):
             # arg max aij
             
             decision_table = self.decision_table(self.current_node_id)
+
             next_node = max(decision_table.iteritems(), key=operator.itemgetter(1))[0]
             self.move_ant(next_node)
         
